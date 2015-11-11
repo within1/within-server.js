@@ -1,0 +1,12 @@
+{
+  "name": "within-server",
+  "version": "0.1.0",
+  "description": "Main server code for Within.guru",
+  "main": "within.js",
+  "scripts": {
+    "start": "node within.js"
+  },
+  "dependencies": {
+    "sequelize": "^3.13.0"
+  }
+}
