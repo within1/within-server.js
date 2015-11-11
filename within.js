@@ -1,3 +1,4 @@
+var fs = require("fs");
 var express = require("express");
 var session = require("express-session");
 var compression = require('compression')
@@ -25,20 +26,24 @@ app.use(session({
   proxy: true // if you do SSL outside of node.
 }))
 
-app.use('/assets', express.static(__dirname + '/assets'));
+app.use('/static/', express.static(__dirname + '/static/'));
 
-app.get("/", function(req, res) {
-	res.jsonp({"ok" : "ok"});
-});
+// apply all routes
+fs
+  .readdirSync(__dirname+"/routes")
+  .filter(function(file) {
+    return (file.indexOf(".") !== 0) && (file !== "index.js");
+  })
+  .forEach(function(file) {
+  	var croute = require(__dirname+"/routes/"+file);
+  	if (Object.keys(croute).length == 0)
+  		return;
+    console.log(file, croute);
+  	app.use(croute);
+  });
 
-app.use('/assets', express.static(__dirname + '/assets'));
 
 models.sequelize.sync().then(function() {
-	/*
-	models.sequelize.query("SELECT * FROM users", { type: models.sequelize.QueryTypes.SELECT}).then(function(users) {
-		console.log("query success:");
-		console.log(JSON.stringify(users,0,4));
-	}); */
 	var server = http.createServer(app);
 	if (process.env.PORT == undefined) {
 		process.env.PORT = 1337;
