@@ -10,6 +10,10 @@ config  = {
 	        database: 'WithinDevelopment',
 	        dialect : "mssql"
 	    }
+	},
+	admin : {
+		user : "within",
+		password : "sfwh"
 	}
 };
 

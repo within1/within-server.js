@@ -32,13 +32,12 @@ app.use('/static/', express.static(__dirname + '/static/'));
 fs
   .readdirSync(__dirname+"/routes")
   .filter(function(file) {
-    return (file.indexOf(".") !== 0) && (file !== "index.js");
+    return (file.indexOf(".") !== 0) && (file !== "index.js") && (file.endsWith(".js"))
   })
   .forEach(function(file) {
   	var croute = require(__dirname+"/routes/"+file);
   	if (Object.keys(croute).length == 0)
   		return;
-    console.log(file, croute);
   	app.use(croute);
   });
 
