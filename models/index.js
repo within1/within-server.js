@@ -26,5 +26,5 @@ Object.keys(db).forEach(function(modelName) {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-
+console.log("Models reinit");
 module.exports = db;

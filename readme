@@ -6,5 +6,15 @@ To run locally:
 > npm init
 > npm start
 
-This will check out the entire codebase; download dependencies, and start the webserver. After start, opening a browser, and pointing it to http://127.200.0.5:1337    should allow usage of the entire app.
+This will check out the entire codebase; download dependencies, and start the webserver. After start, opening a browser, and pointing it to http://127.200.0.5:5000    should allow usage of the entire app.
+
+# Development notes:
+Using forever is highly recommended for development:
+
+> [sudo] npm install forever -g
+> forever start --watch within.js
+> forever list
+> tail -f  [forever logfile from the above]
+
+This will start the script, and monitor the folder for changes. Editing, and saving any file will immediately restart the script. This allows development cycle of: [editing some file] -> [ctrl/cmd]+s, [cmd/alt]+tab to chrome, f5 for page refresh, observe changes, [cmd/alt]+tab back to editor.
 

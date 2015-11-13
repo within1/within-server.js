@@ -11,6 +11,10 @@ var SequelizeStore = require('connect-session-sequelize')(session.Store);
 // start web server
 var app = express();
 app.use(compression({ threshold: 512 }));
+
+app.use('/static/', express.static(__dirname + '/static/'));
+
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -26,7 +30,10 @@ app.use(session({
   proxy: true // if you do SSL outside of node.
 }))
 
-app.use('/static/', express.static(__dirname + '/static/'));
+app.use(function(req, res, next) {
+  console.log("Requested URL: ",req.url);
+  next();
+});
 
 // apply all routes
 fs
@@ -45,8 +52,8 @@ fs
 models.sequelize.sync().then(function() {
 	var server = http.createServer(app);
 	if (process.env.PORT == undefined) {
-		process.env.PORT = 1337;
-		server.listen(1337,"127.200.0.5");
+		process.env.PORT = 5000;
+		server.listen(5000,"127.200.0.5");
 	} else {
 		server.listen(process.env.PORT);
 	}
