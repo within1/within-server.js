@@ -24,7 +24,7 @@ router.get("/admin", function(req, res) {
 	return res.redirect(301, "/admin/user/");
 });
 
-router.get('/admin/user/*', function(req, res) {
+router.get('/admin/users/*', function(req, res) {
 	console.log(req.params);
 	console.log("/admin route");
 	// process query filter
@@ -54,7 +54,7 @@ router.get('/admin/user/*', function(req, res) {
 	async.parallel({
 		"users" : function(cb) {
 			// query for all users
-			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as crdate FROM users u order by u.DateCreated desc", { type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as crdate FROM users u "+cfilters.join(" ")+" order by u.DateCreated desc", { replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
 		"tags" : function(cb) {
 			// query for all tags
@@ -64,18 +64,56 @@ router.get('/admin/user/*', function(req, res) {
 			cb(null, [] );
 		}
 		} , function(err, data) {
-			console.log("hello");
 			var output = Mustache.render(fs.readFileSync("./routes/admin_userlist.html", "utf8"), data);
 			var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 			res.send(framed);
 		});
 });
 
-router.get("/admin/users/:userid", function(req, res) {
+router.get("/admin/stats", function(req,res) {
+	var data = [];
+	var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), data);
+	var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+	res.send(framed);
+});
+
+router.get("/admin/user/:userid", function(req, res) {
 	if (req.params.userid === undefined)
 		return res.send("no userid defined");
-	res.send("hello world! 123 "+req.params.userid);
-	console.log(req.params);
+	async.parallel({
+		"user" : function(cb) {
+			var userdata = null;
+			// query for single user
+			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as sDateCreated FROM users where id = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT})
+			.then(function(res) {
+				userdata = res[0];
+				models.sequelize.query("SELECT * from TagInstances ti join Tags t on ti.TagID = t.ID where ti.OwnerID = ?",{ replacements: [res[0]["EntityID"]], type: models.sequelize.QueryTypes.SELECT})
+				.then(function(res) {
+					cb(null, {"data" : userdata, "tags" : res});
+				});
+			});
+		},
+		"schools" : function(cb) {
+			models.sequelize.query("SELECT * from UserEducations ue left join Schools s on ue.SchoolID = s.ID where UserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"employers" : function(cb) {
+			models.sequelize.query("SELECT * from UserEmployments ue left join Employers e on ue.EmployerID = e.ID where UserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"matches" : function(cb) {
+			models.sequelize.query("SELECT * from Matches where ReachingOutUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"beingmatched" : function(cb) {
+			models.sequelize.query("SELECT * from Matches where OtherUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		}
+	}, function(err, data) {
+		return  res.json(data);
+		var output = Mustache.render(fs.readFileSync("./routes/admin_usersingle.html", "utf8"), data);
+		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+		res.send(framed);
+	});
+
+	// res.send("hello world! 123 "+req.params.userid);
+	// console.log(req.params);
 
 });
 

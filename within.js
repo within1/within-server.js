@@ -48,14 +48,13 @@ fs
   	app.use(croute);
   });
 
+var server = http.createServer(app);
+if (process.env.PORT == undefined) {
+	process.env.PORT = 5000;
+	server.listen(5000,"127.200.0.5");
+} else {
+	server.listen(process.env.PORT);
+}
+console.log("Server started on port "+process.env.PORT);
 
-models.sequelize.sync().then(function() {
-	var server = http.createServer(app);
-	if (process.env.PORT == undefined) {
-		process.env.PORT = 5000;
-		server.listen(5000,"127.200.0.5");
-	} else {
-		server.listen(process.env.PORT);
-	}
-	console.log("Server started on port "+process.env.PORT);
-});
+

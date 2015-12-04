@@ -83,7 +83,6 @@ function indexUsers(cb) {
 function matchUser(uid, cb) {
 	client.get({"index" : config["index"], "type" : "user", "id" : uid },
 		function(err, cuser) {
-			console.log(cuser);
 			if (err !== undefined) {
 				return cb(err,null);
 			}
@@ -93,13 +92,10 @@ function matchUser(uid, cb) {
 					"query": {
 						"function_score" : {
 							"functions" : [
-								{"random_score" : {}, weight : 10},
 								{"filter" : { "term" : {"employers" : "milkbone"}},  weight: 10
 								},
 								{"filter" : { "terms" : {"skilltags" : ["enterprise", "operations"] }},  weight: 40
 								},
-
-
 							],
 							"score_mode" : "sum",
 							"boost_mode" : "replace",
