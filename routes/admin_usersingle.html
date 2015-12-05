@@ -1,10 +1,29 @@
 <h1>{{user.FirstName}} {{user.LastName}} ( {{user.Title}} )</h1>
+<br /><br />
 <hr size="1" />
+<table style="color:#000;max-width: 600px;" >
 {{#basicinfo}}
-	{{name}} : {{value}}
+	<tr><td>{{name}}</td><td>{{value}}</td></tr>
 {{/basicinfo}}
-
+</table>
+<hr size="1" />
+<h3>Education:</h3>
 {{#user.UserEducations}}
-School: {{School.Name}} {{School.Degree}}
+[{{StartYear}} - {{EndYear}}]  School: {{School.Name}}  Degree: {{Degree}}  Major: {{Major}} <br />
 {{/user.UserEducations}}
+<h3>Employment:</h3>
+
+{{#user.UserEmployments}}
+[{{StartYear}} - {{EndYear}}]  Employer: {{Employer.Name}}  Title: {{Title}}  <br />
+{{/user.UserEmployments}}
+
+<h3>Interested in:</h3>
+
+
+<h3>Knows about:</h3>
+
+
+<h3>Reached out for:</h3>
+
+<h3>Matched for:</h3>
 

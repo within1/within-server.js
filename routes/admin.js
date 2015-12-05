@@ -94,6 +94,7 @@ router.get("/admin/user/:userid", function(req, res) {
 		for (var i in data.dataValues) {
 			if ((data.dataValues[i] instanceof Array) || (data.dataValues[i] instanceof Object)) {
 				continue;
+			} else if (i == "Token") {
 			} else {
 				rl.push({"name" : i, "value" : data.dataValues[i]});
 			}
