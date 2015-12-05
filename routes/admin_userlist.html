@@ -18,8 +18,10 @@
 </table>
 
 <div style="float:left; padding:20px; width:400px">
-	Tags: {{#tags}}<a href="./tags/{{{TagID}}}/">{{{Name}}} ({{{usercount}}})</a>   {{/tags}}
-	<br /><br /><br />
-	Employers: {{#employers}}<a href="./employers/{{{emplid}}}/">{{{Name}}} {{{usercount}}}</a> {{/employers}}
-	<br />
+	Tags: {{#tags}}<a href="/admin/users/tags/{{{TagID}}}/">{{{Name}}} ({{{usercount}}})</a>   {{/tags}}
+	<br /><br />
+	Employers: {{#employers}}<a href="/admin/users/employers/{{{emplid}}}/">{{{Name}}} {{{usercount}}}</a> {{/employers}}
+	<br /><br />
+	Schools: {{#schools}}<a href="/admin/users/schools/{{{schoolID}}}/">{{{Name}}} {{{usercount}}}</a> {{/schools}}
+	<br /><br />
 </div>

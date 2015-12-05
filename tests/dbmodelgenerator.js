@@ -47,23 +47,40 @@ models.sequelize.query("SELECT * FROM information_schema.tables", { type: models
     }
     out += clines.join(", ");
     out += "};\n"
+
     var relmatrix = {};
+    var relcol = {};
     for (var i in allrelations) {
-      var casval = "";
-      var cascmd = "";
-      // disambiguate N:M relations
       var cas = allrelations[i]["source_table"];
-      var cascol = allrelations[i]["source_column"];
+      if (relcol[allrelations[i]["source_column"]] === undefined)
+        relcol[allrelations[i]["source_column"]] = 1;
+      else
+        relcol[allrelations[i]["source_column"]] += 1;
+
       if (relmatrix[cas] === undefined)
         relmatrix[cas] = {};
       if (relmatrix[cas][allrelations[i]["target_table"]] === undefined)
         relmatrix[cas][allrelations[i]["target_table"]] = 1;
       else {
-        cascmd = ', as : "'+((cascol.endsWith("ID"))?(cascol.substr(0,cascol.length-2)):(cascol))+'" ';
+        relmatrix[cas][allrelations[i]["target_table"]] += 1;
       }
+    }
+    for (var i in allrelations) {
+      var casval = "";
+      var cascmd = "";
+      var cas = allrelations[i]["source_table"];
+      // disambiguate N:M relations
+      var cascol = allrelations[i]["source_column"];
+      if (relmatrix[cas][allrelations[i]["target_table"]] > 1) {
+        var colname =
+        relcol[allrelations[i]["source_column"]]
+        cascmd = ', as : "'+allrelations[i]["source_table"]+((cascol.endsWith("ID"))?(cascol.substr(0,cascol.length-2)):(cascol))+'" ';
+      }
+
       out += "res."+allrelations[i]["target_table"]+".hasMany(res."+allrelations[i]["source_table"]+', {foreignKey: "'+allrelations[i]["source_column"]+'" '+cascmd+'} );\n'
       out += "res."+allrelations[i]["source_table"]+".belongsTo(res."+allrelations[i]["target_table"]+', {foreignKey: "'+allrelations[i]["source_column"]+'" '+cascmd+'} );\n'
     }
+
     out += " return res;\n";
     out += "};";
 

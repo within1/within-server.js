@@ -21,8 +21,13 @@ router.use("/admin/", function(req, res, next) {
 
 
 router.get("/admin", function(req, res) {
-	return res.redirect(301, "/admin/user/");
+	return res.redirect(301, "/admin/users/");
 });
+router.get("/admin/", function(req, res) {
+	return res.redirect(301, "/admin/users/");
+});
+
+// -------- main User dashboard --------
 
 router.get('/admin/users/*', function(req, res) {
 	console.log(req.params);
@@ -49,12 +54,14 @@ router.get('/admin/users/*', function(req, res) {
 			}
 		}
 	}
-	console.log(cfilters);
-
+	var allfilters = "";
+	if (cfilters.length > 0)
+		allfilters = " where ID in (select ID from Users "+cfilters.join(" ")+" ) ";
+	console.log()
 	async.parallel({
 		"users" : function(cb) {
 			// query for all users
-			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as crdate FROM users u "+cfilters.join(" ")+" order by u.DateCreated desc", { replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as crdate FROM users u "+allfilters+" order by u.DateCreated desc", { replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
 		"tags" : function(cb) {
 			// query for all tags
@@ -70,13 +77,6 @@ router.get('/admin/users/*', function(req, res) {
 		});
 });
 
-router.get("/admin/stats", function(req,res) {
-	var data = [];
-	var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), data);
-	var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
-	res.send(framed);
-});
-
 router.get("/admin/user/:userid", function(req, res) {
 	if (req.params.userid === undefined)
 		return res.send("no userid defined");
@@ -85,16 +85,34 @@ router.get("/admin/user/:userid", function(req, res) {
 		{ model : models.UserEducations, separate: true, include: [models.Schools]},
 		{ model : models.UserEmployments, separate: true, include: [models.Employers]},
 		{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }]  },
-		{ model : models.Matches, separate: true },
-		{ model : models.Matches, separate: true, through : "ReachingOutUserID", as : "ReachingOutUser" }
+		{ model : models.Matches, separate: true, through : "OtherUserID", as : "MatchesOtherUser"  },
+		{ model : models.Matches, separate: true, through : "ReachingOutUserID", as : "MatchesReachingOutUser" }
 	] }).then(function(data) {
-		return res.json(data);
-		// console.log(data);
-		return  res.json(data);
-		var output = Mustache.render(fs.readFileSync("./routes/admin_usersingle.html", "utf8"), data);
+		console.log(data);
+		var resdata = {"user" : data};
+		var rl = [];
+		for (var i in data.dataValues) {
+			if ((data.dataValues[i] instanceof Array) || (data.dataValues[i] instanceof Object)) {
+				continue;
+			} else {
+				rl.push({"name" : i, "value" : data.dataValues[i]});
+			}
+		}
+		resdata["basicinfo"] = rl;
+		var output = Mustache.render(fs.readFileSync("./routes/admin_usersingle.html", "utf8"), resdata);
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 		res.send(framed);
 	});
 });
+
+// -------- main KPI dashboard --------
+router.get("/admin/stats", function(req,res) {
+	var data = [];
+	var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), data);
+	var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+	res.send(framed);
+});
+
+
 
 module.exports = router;

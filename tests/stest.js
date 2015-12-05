@@ -1,13 +1,12 @@
 var models = require("../models");
 
-	models.Users.findById(1, {include: [
-		{ model : models.UserEducations, separate: true, include: [models.Schools] },
-		{ model : models.UserEmployments, separate: true, include: [models.Employers]},
-		{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }]  },
-		{ model : models.Matches, separate: true },
-		{ model : models.Matches, separate: true, through : "ReachingOutUserID", as : "ReachingOutUser" }
+	models.Users.findAll({include: [
+		{ model : models.Entities, include: [{model: models.TagInstances,
+			include: [
+				{model: models.Tags, required: true }
+			] }
+		]}
 	] }).then(function(scp) {
-
 	  console.log(JSON.stringify(scp,0,4));
 	});
 

@@ -1,9 +1,10 @@
-<h1>{{user.data.FirstName}} {{user.data.LastName}} ( {{user.data.Title}} )</h1>
+<h1>{{user.FirstName}} {{user.LastName}} ( {{user.Title}} )</h1>
 <hr size="1" />
-{{#schools}}
-	{{id}}
-{{/schools}}
+{{#basicinfo}}
+	{{name}} : {{value}}
+{{/basicinfo}}
 
-{{schools}}
-{{{schools}}}
-{{tags}}
+{{#user.UserEducations}}
+School: {{School.Name}} {{School.Degree}}
+{{/user.UserEducations}}
+
