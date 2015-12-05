@@ -18,7 +18,7 @@ function GetMatchesForUser() {
 	});
 }
 
-GetMatchesForUser();
+// GetMatchesForUser();
 
 function GetUserInformation() {
 	request.post({
@@ -28,10 +28,11 @@ function GetUserInformation() {
 	  json:    {"UserID" : 4067, "UserToken" : "Dbr/k5trWmO3XRTk3AWfX90E9jwpoh59w/EaiU9df/OkFa6bxluaKsQmBtKDNDHbBpplmFe2Zo06m6TOpxxDc3iaHQaFLsi1zXjBFsfQRVTewDXwdZZ5mxNdEp4HEdrIQY6VRqDvBzltACUdl2CB+gr1grGpDN+UmOnCUh9wD+BcROYXx5SmyTNtFYi+oKU7gjPLI9dWeoJWLVLUmAr6I8fbLEUMuggwf0XH1fUTMrHOGJSHpu7MKKv428sjZqTXVvSxe+GwNGkgcbrApOiKrRXOcQDv7r93"}
 	}, function(error, response, body){
 		console.log(error);
-		console.log(body);
+		console.log(JSON.stringify(body,0,4));
 	});
 }
 
+GetUserInformation();
 
 // AddEditFacebookUser
 // AddUserToWaitlist

@@ -80,41 +80,21 @@ router.get("/admin/stats", function(req,res) {
 router.get("/admin/user/:userid", function(req, res) {
 	if (req.params.userid === undefined)
 		return res.send("no userid defined");
-	async.parallel({
-		"user" : function(cb) {
-			var userdata = null;
-			// query for single user
-			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as sDateCreated FROM users where id = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT})
-			.then(function(res) {
-				userdata = res[0];
-				models.sequelize.query("SELECT * from TagInstances ti join Tags t on ti.TagID = t.ID where ti.OwnerID = ?",{ replacements: [res[0]["EntityID"]], type: models.sequelize.QueryTypes.SELECT})
-				.then(function(res) {
-					cb(null, {"data" : userdata, "tags" : res});
-				});
-			});
-		},
-		"schools" : function(cb) {
-			models.sequelize.query("SELECT * from UserEducations ue left join Schools s on ue.SchoolID = s.ID where UserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
-		},
-		"employers" : function(cb) {
-			models.sequelize.query("SELECT * from UserEmployments ue left join Employers e on ue.EmployerID = e.ID where UserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
-		},
-		"matches" : function(cb) {
-			models.sequelize.query("SELECT * from Matches where ReachingOutUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
-		},
-		"beingmatched" : function(cb) {
-			models.sequelize.query("SELECT * from Matches where OtherUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
-		}
-	}, function(err, data) {
+	// get single user model
+	models.Users.findById(req.params.userid, {include: [
+		{ model : models.UserEducations, separate: true, include: [models.Schools]},
+		{ model : models.UserEmployments, separate: true, include: [models.Employers]},
+		{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }]  },
+		{ model : models.Matches, separate: true },
+		{ model : models.Matches, separate: true, through : "ReachingOutUserID", as : "ReachingOutUser" }
+	] }).then(function(data) {
+		return res.json(data);
+		// console.log(data);
 		return  res.json(data);
 		var output = Mustache.render(fs.readFileSync("./routes/admin_usersingle.html", "utf8"), data);
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 		res.send(framed);
 	});
-
-	// res.send("hello world! 123 "+req.params.userid);
-	// console.log(req.params);
-
 });
 
 module.exports = router;
