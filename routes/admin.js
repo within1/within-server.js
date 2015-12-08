@@ -50,6 +50,9 @@ router.get('/admin/users/*', function(req, res) {
 			else if (cps[i] == "skill") {
 				cfilters.push(" INTERSECT select cu.ID from TagInstances ti join Users cu on ti.OwnerID = cu.EntityID where ti.TagID = ? and type = 1");
 				cparams.push(cps[i+1]);
+			} else if (cps[i] == "BTI") {
+				cfilters.push(" INTERSECT select cu.ID from TagInstances ti join Users cu on ti.OwnerID = cu.EntityID where ti.TagID = ? and type = 2");
+				cparams.push(cps[i+1]);
 			} else if (cps[i] == "interest") {
 				cfilters.push(" INTERSECT select cu.ID from TagInstances ti join Users cu on ti.OwnerID = cu.EntityID where ti.TagID = ? and type = 3");
 				cparams.push(cps[i+1]);
@@ -68,7 +71,11 @@ router.get('/admin/users/*', function(req, res) {
 	async.parallel({
 		"users" : function(cb) {
 			// query for all users
-			models.sequelize.query("SELECT *, FORMAT(DateCreated, 's') as crdate FROM users u "+allfilters+" order by u.DateCreated desc", { replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+			models.sequelize.query("SELECT *, FORMAT(DateCreated, 'MM-dd-yyyy') as crdate FROM users u "+allfilters+" order by u.DateCreated desc", { replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"BTI" : function(cb) {
+			// query for relevant tags
+			models.sequelize.query("select * from ( select ti.TagID, COUNT(u.ID) as usercount from TagInstances ti join Users u on ti.OwnerID = u.EntityID where ti.Type = 2 group by ti.TagID ) as tci left join Tags t on tci.TagID = t.ID", { type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
 		"skills" : function(cb) {
 			// query for relevant tags
@@ -107,6 +114,7 @@ router.get("/admin/user/:userid", function(req, res) {
 				{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }] }
 			]}).then(function(data) { cb(null, data); })
 		},
+		// getting the reachouts, along with any feedback data
 		"reachingout" : function(cb) {
 			models.sequelize.query("select * from Matches m join Users u on u.ID = m.OtherUserID where m.ReachingOutUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT} ).then(function(res) { cb(null,res ); });
 		},

@@ -18,3 +18,4 @@ Using forever is highly recommended for development:
 
 This will start the script, and monitor the folder for changes. Editing, and saving any file will immediately restart the script. This allows development cycle of: [editing some file] -> [ctrl/cmd]+s, [cmd/alt]+tab to chrome, f5 for page refresh, observe changes, [cmd/alt]+tab back to editor.
 
+---------------------------------------

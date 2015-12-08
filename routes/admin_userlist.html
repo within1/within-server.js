@@ -2,10 +2,15 @@
 Filter by:
 <select id="filtername" onchange="javascript:change_main_filter();">
 	<option value="">No filter</option>
+	<option value="BTI">Breaking the ice</option>
 	<option value="interest">interest</option>
 	<option value="skill">skill</option>
 	<option value="school">school</option>
 	<option value="employer">employer</option>
+</select>
+
+<select id="BTI_param"   style="display:none">
+	{{#BTI}}<option value="{{TagID}}">{{Name}} ({{usercount}})</option>{{/BTI}}
 </select>
 
 <select id="interest_param"   style="display:none">
@@ -27,17 +32,17 @@ Filter by:
 <button type="button" onclick="javascript:change_filter();">Apply Filter</button>
 <br />
 
-<table cellspacing="1" class="tablesorter" style="width:660px;">
+<table cellspacing="1" class="tablesorter" style="min-width:660px;">
 <thead>
 	<tr><th>Signup</th><th>Email</th><th>Name</th><th>Title</th><th>Details</th></tr>
 </thead>
 <tbody id="userlisting">
 	{{#users}}
 <tr>
-	<td>{{{crdate}}}</td>
+	<td style="width:120px">{{{crdate}}}</td>
 	<td><a href="/admin/user/{{{ID}}}">{{{EmailAddress}}}</a></td>
 	<td>{{{FirstName}}} {{{LastName}}}</td>
-	<td>{{{Title}}}</td>
+	<td style="width:200px">{{{Title}}}</td>
 	<td><a href="/admin/user/{{{ID}}}">Details...</a></td>
 </tr>
 	{{/users}}
