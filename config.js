@@ -13,7 +13,7 @@ config  = {
 	},
 	admin : {
 		user : "within",
-		password : "sfwh"
+		password : "Mojomojo8"
 	},
 	elastic: {
 		development: {

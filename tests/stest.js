@@ -1,5 +1,11 @@
 var models = require("../models");
 
+models.Matches.findAll({where : {ReachingOutUserID : 27}, include: [{model: models.Users}]} ).then(function(scp) {
+	  console.log(JSON.stringify(scp,0,4));
+});
+
+/*
+
 	models.Users.findAll({include: [
 		{ model : models.Entities, include: [{model: models.TagInstances,
 			include: [
@@ -9,9 +15,6 @@ var models = require("../models");
 	] }).then(function(scp) {
 	  console.log(JSON.stringify(scp,0,4));
 	});
-
-
-/*
 
 
 

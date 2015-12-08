@@ -17,13 +17,41 @@
 [{{StartYear}} - {{EndYear}}]  Employer: {{Employer.Name}}  Title: {{Title}}  <br />
 {{/user.UserEmployments}}
 
+<h3>Breaking The Ice:</h3>
+{{#BTI}}<a href="/admin/users/BTI/{{TagID}}">{{Tag.Name}}</a>&nbsp;&nbsp;{{/BTI}}
+
+<h3>Skills:</h3>
+{{#Skills}}<a href="/admin/users/Interests/{{TagID}}">{{Tag.Name}}</a>&nbsp;&nbsp;{{/Skills}}
+
 <h3>Interested in:</h3>
+{{#Interests}}<a href="/admin/users/Skills/{{TagID}}">{{Tag.Name}}</a>&nbsp;&nbsp;{{/Interests}}
 
-
-<h3>Knows about:</h3>
-
-
-<h3>Reached out for:</h3>
-
-<h3>Matched for:</h3>
+<h3>Reaching out to:</h3>
+<table style="color:#000;max-width: 600px;" >
+	<thead><tr><th>With</th><th>Rationale</th><th>Action taken</th><th>Thanks given</th></tr></thead>
+	<tbody>
+{{#reachingout}}
+<tr><td><a href="/admin/user/{{ID}}">{{FirstName}} {{LastName}}</a></td>
+	<td>{{MatchRationale}}</td>
+<td></td>
+<td></td>
+</tr>
+{{/reachingout}}
+	</tbody>
+</table>
+<br />
+<h3>Matched as recipient:</h3>
+<table style="color:#000;max-width: 600px;" >
+	<thead><tr><th>With</th><th>Rationale</th><th>Action taken</th><th>Thanks given</th></tr></thead>
+	<tbody>
+{{#matchedwith}}
+<tr><td><a href="/admin/user/{{ID}}">{{FirstName}} {{LastName}}</a></td>
+	<td>{{MatchRationale}}</td>
+<td></td>
+<td></td>
+</tr>
+{{/matchedwith}}
+	</tbody>
+</table>
+<br />
 

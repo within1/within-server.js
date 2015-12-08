@@ -1,6 +1,33 @@
 <h1>User listing</h1>
+Filter by:
+<select id="filtername" onchange="javascript:change_main_filter();">
+	<option value="">No filter</option>
+	<option value="interest">interest</option>
+	<option value="skill">skill</option>
+	<option value="school">school</option>
+	<option value="employer">employer</option>
+</select>
 
-<table cellspacing="1" class="tablesorter" style="width:660px; float:left;">
+<select id="interest_param"   style="display:none">
+	{{#interests}}<option value="{{TagID}}">{{Name}} ({{usercount}})</option>{{/interests}}
+</select>
+
+<select id="skill_param"   style="display:none" >
+	{{#skills}}<option value="{{TagID}}">{{Name}} ({{usercount}})</option>{{/skills}}
+</select>
+
+<select id="school_param"   style="display:none" >
+	{{#schools}}<option value="{{SchoolID}}">{{Name}} ({{usercount}})</option>{{/schools}}
+</select>
+
+<select id="employer_param"   style="display:none" >
+	{{#employers}}<option value="{{EmployerID}}">{{Name}} ({{usercount}})</option>{{/employers}}
+</select>
+
+<button type="button" onclick="javascript:change_filter();">Apply Filter</button>
+<br />
+
+<table cellspacing="1" class="tablesorter" style="width:660px;">
 <thead>
 	<tr><th>Signup</th><th>Email</th><th>Name</th><th>Title</th><th>Details</th></tr>
 </thead>
@@ -17,11 +44,31 @@
 </tbody>
 </table>
 
-<div style="float:left; padding:20px; width:400px">
-	Tags: {{#tags}}<a href="/admin/users/tags/{{{TagID}}}/">{{{Name}}} ({{{usercount}}})</a>   {{/tags}}
-	<br /><br />
-	Employers: {{#employers}}<a href="/admin/users/employers/{{{emplid}}}/">{{{Name}}} {{{usercount}}}</a> {{/employers}}
-	<br /><br />
-	Schools: {{#schools}}<a href="/admin/users/schools/{{{schoolID}}}/">{{{Name}}} {{{usercount}}}</a> {{/schools}}
-	<br /><br />
-</div>
+<script type="text/javascript">
+var prevfilter = "";
+function change_filter() {
+	var cf = $("#filtername").val();
+	var subf = $("#"+cf+"_param").val();
+	window.location = "/admin/users/"+cf+"/"+subf;
+}
+
+function change_main_filter() {
+	if (prevfilter != "")
+		$("#"+prevfilter+"_param").hide();
+	var cf = $("#filtername").val();
+	if (cf != "") {
+		$("#"+cf+"_param").show();
+		prevfilter = cf;
+	}
+}
+{{#cfilterid}}
+// activate current filter
+jQuery(document).ready(function(){
+	$("#filtername").val("{{cfiltername}}");
+	$("#{{cfiltername}}_param").show();
+	$("#{{cfiltername}}_param").val("{{cfilterid}}");
+	prevfilter = "{{cfiltername}}";
+});
+
+{{/cfilterid}}
+</script>
