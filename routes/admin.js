@@ -149,13 +149,101 @@ router.get("/admin/user/:userid", function(req, res) {
 	});
 });
 
+/*
+Profile created     => users.DateCreated
+Profile approved	=> Appstatus & DateAppStatusModified
+Received recommendations => MatchDate
+Reached out			=> message first date
+Conversation (responded) => response first date
+number of thanks#   => currently undefined
+
+*/
 // -------- main KPI dashboard --------
 router.get("/admin/stats", function(req,res) {
 	var data = [];
-	var profileCreated = "select count(distinct ID) as cnum, cdate from (select ID, Datediff(day, DateCreated, GETDATE() ) as cdate from users) as t  group by cdate";
-	var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), data);
-	var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
-	res.send(framed);
+	var cparams = ["2015-09-01", "2015-09-01", "2016-10-01"];
+	var byday = 1;
+	async.parallel({
+		"Profile created" : function(cb) {
+			models.sequelize.query("select count(distinct ID) as cnum, cdate from (select ID, Datediff(day, ?, DateCreated ) as cdate from users where DateCreated > ? and DateCreated < ?) as t group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"Profile approved" : function(cb) {
+			models.sequelize.query("select count(distinct ID) as cnum, cdate from ( select ID, Datediff(day, ?, DateCreated) as cdate from users where AppStatus > 0 and  DateAppStatusModified > ? and DateAppStatusModified < ?) as t group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"Received recommendation" : function(cb) {
+			models.sequelize.query("select count(distinct ReachingOutUserID) as cnum, cdate from ( select ReachingOutUserID, Datediff(day, ?,MatchDate) as cdate from Matches where MatchDate > ? and MatchDate < ?) as t group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"Reached out" : function(cb) {
+			models.sequelize.query("select count(distinct firstContactID) as cnum, cdate from (\
+ select SenderID, ReceiverID, min(ID) as firstContactID, min(DateCreated) as firstcontact, Datediff(day, ?, min(DateCreated)) as cdate \
+ from Messages group by SenderID, ReceiverID)\
+ as t1 left JOIN (\
+ select SenderID as bSenderID, ReceiverID as bReceiverID, min(ID) as contactbackID, min(DateCreated) as contactback from Messages \
+ group by SenderID, ReceiverID\
+ ) as t2 on (t1.SenderID = t2.bReceiverID and t1.ReceiverID = t2.bSenderID) \
+ where ( (firstcontact >  ?) and (firstcontact < ?) and (contactback is null OR firstcontact < contactback))   group by cdate  ",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+		"Conversation (responded)" : function(cb) {
+			models.sequelize.query("select count(distinct contactbackID) as cnum, cdate from  ( \
+select SenderID, ReceiverID, min(ID) as firstContactID, min(DateCreated) as firstcontact \
+from Messages group by SenderID, ReceiverID) as t1  \
+left JOIN  \
+(select SenderID as bSenderID, ReceiverID as bReceiverID, min(ID) as contactbackID, min(DateCreated) as contactback, Datediff(day, ?, min(DateCreated) ) as cdate from Messages group by SenderID, ReceiverID) as t2  \
+on (t1.SenderID = t2.bReceiverID and t1.ReceiverID = t2.bSenderID)  \
+where ( (firstcontact > ?) and (firstcontact < ?) and (contactback is null OR firstcontact < contactback)) \
+group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
+
+		"Number of thanks" : function(cb) {
+			cb(null,null);
+			/*
+			models.sequelize.query("",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+			*/
+		}
+	},  function(err, data) {
+		paramtodate = function(s) {
+			var k = s.split("-");
+			return new Date(k[0],k[1]-1,k[2]);
+		};
+		// total number of days between start & end date
+		var numdays = Math.floor((new Date(paramtodate(cparams[2])) - new Date(paramtodate(cparams[1]))) / (1000*60*60*24));
+		var resbuckets = {};
+		// bucket each dayno-counter pair
+		for (var key in data) {
+			var cseries = data[key];
+			resbuckets[key] = [];
+			// initialize the entire series with 0
+			for (var i = 0; i < Math.floor(numdays/byday)+1; i++)
+				resbuckets[key].push(0);
+			for (var i in cseries) {
+				var cn = cseries[i]["cdate"];
+				if (cn == null)
+					continue;
+				var cbucket = Math.floor(cn / byday);
+				resbuckets[key][cbucket] += cseries[i]["cnum"];
+			}
+		}
+		var rkpis = [];
+		for (var k in resbuckets)
+			rkpis.push({"description" : k, "series" : resbuckets[k]});
+		console.log(rkpis);
+		// console.log(data);
+		var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), {"kpis" : rkpis});
+		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+		res.send(framed);
+	});
+/*
+	var profileApproved = "";
+	var recommendation = "";
+	var reachresponse = "";
+ 	var thanksgiven = "";
+ 	*/
 });
 
 

@@ -3,7 +3,7 @@ Main server code for Within.guru
 To run locally:
 
 > git clone [..]
-> npm init
+> npm install
 > npm start
 
 This will check out the entire codebase; download dependencies, and start the webserver. After start, opening a browser, and pointing it to http://127.200.0.5:5000    should allow usage of the entire app.

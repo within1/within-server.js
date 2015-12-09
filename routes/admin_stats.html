@@ -1,4 +1,15 @@
-Admin kpis<br />
+<h1>Admin kpis</h1> <br />
+<table cellspacing="1" class="tablesorter" style="min-width:660px;">
+<tbody id="userlisting">
+	{{#kpis}}
+<tr><td>{{description}}</td>
+	{{#series}}<td>{{.}}</td>{{/series}}
+</tr>
+	{{/kpis}}
+</tbody>
+</table>
+
+<!--
 <br />
 Profile created<br />
 Profile approved<br />
@@ -10,3 +21,4 @@ number of thanks#<br />
 Reached out rate = reach out no / all received rec<br />
 Resp rate = Conversation happened / reach out no<br />
 Avg conv per active = Conversation happened / received rec<br />
+-->
