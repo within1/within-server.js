@@ -149,7 +149,9 @@ router.get("/admin/user/:userid", function(req, res) {
 	});
 });
 
-/*
+// -------- main KPI dashboard --------
+/* Mapping between KPI values, and database:
+
 Profile created     => users.DateCreated
 Profile approved	=> Appstatus & DateAppStatusModified
 Received recommendations => MatchDate
@@ -158,12 +160,29 @@ Conversation (responded) => response first date
 number of thanks#   => currently undefined
 
 */
-// -------- main KPI dashboard --------
-router.get("/admin/stats", function(req,res) {
-	var data = [];
-	var cparams = ["2015-09-01", "2015-09-01", "2016-10-01"];
+router.get("/admin/stats/*", function(req,res) {
+	// parse date strings parameters
+	var dateToStr = function(d) {
+		return (d.getYear() + 1900)+"-"+(d.getMonth()+1)+"-"+(oneMonthEarlier.getDate());
+	};
+	// cparams define: [startdate,startdate,enddate];   byday defines resolution
+	var oneMonthEarlier = new Date(new Date() - (1000*60*60*24 * 30));
+	var cparams = [ dateToStr(oneMonthEarlier), dateToStr(oneMonthEarlier), dateToStr(new Date())];
 	var byday = 1;
-	async.parallel({
+	// parse request parameters
+	var cd = req.params[0].split("/");
+	if ((cd.length > 0) && (cd[0].split("-").length == 3)) {
+		cparams[0] = cd[0];
+		cparams[1] = cd[0];
+	}
+	if ((cd.length > 1) && (cd[1].split("-").length == 3)) {
+		cparams[2] = cd[1];
+	}
+	if (cd.length > 2)
+		byday = cd[2];
+
+	var data = [];
+	var alldatasources = {
 		"Profile created" : function(cb) {
 			models.sequelize.query("select count(distinct ID) as cnum, cdate from (select ID, Datediff(day, ?, DateCreated ) as cdate from users where DateCreated > ? and DateCreated < ?) as t group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
@@ -206,7 +225,9 @@ group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 			*/
 		}
-	},  function(err, data) {
+	};
+	async.parallel(alldatasources,  function(err, data) {
+		var allkeys = Object.keys(alldatasources);
 		paramtodate = function(s) {
 			var k = s.split("-");
 			return new Date(k[0],k[1]-1,k[2]);
@@ -229,21 +250,39 @@ group by cdate",
 				resbuckets[key][cbucket] += cseries[i]["cnum"];
 			}
 		}
+		// add calculated values
+		var calcvals = {
+			"Reached out rate = Reach out / Received recommendation" : ["Reached out", "Received recommendation"],
+			"Response rate = Responded / Reach out" : ["Conversation (responded)", "Reached out"],
+			"Avg Conversation per recommendation" : ["Conversation (responded)", "Received recommendation"]
+		};
+		for (var i in calcvals) {
+			console.log(i);
+			var dres = [];
+			for (var j in resbuckets[calcvals[i][0]]) {
+				if (resbuckets[calcvals[i][1]][j] == 0)
+					dres.push("-");
+				else
+					dres.push( (resbuckets[calcvals[i][0]][j] / resbuckets[calcvals[i][1]][j]).toFixed(2) );
+			}
+			allkeys.push(i);
+			resbuckets[i] = dres;
+		}
+		console.log(resbuckets);
+		var resopts = [];
+		var alldayvars = [7,14,15,30,60];
+		for (var i in alldayvars) {
+			resopts.push({"val" : alldayvars[i], "selected" : (alldayvars[i] == byday)?("selected"):("") });
+		}
 		var rkpis = [];
-		for (var k in resbuckets)
-			rkpis.push({"description" : k, "series" : resbuckets[k]});
-		console.log(rkpis);
+		for (var k in allkeys)
+			rkpis.push({"description" : allkeys[k], "series" : resbuckets[allkeys[k]] });
+		var alldata = {"kpis" : rkpis, "mindate" : cparams[1], "maxdate" : cparams[2], "resolution_options" : resopts};
 		// console.log(data);
-		var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), {"kpis" : rkpis});
+		var output = Mustache.render(fs.readFileSync("./routes/admin_stats.html", "utf8"), alldata );
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 		res.send(framed);
 	});
-/*
-	var profileApproved = "";
-	var recommendation = "";
-	var reachresponse = "";
- 	var thanksgiven = "";
- 	*/
 });
 
 
