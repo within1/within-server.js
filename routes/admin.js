@@ -19,6 +19,12 @@ router.use("/admin/", function(req, res, next) {
     next();
 });
 
+/*
+router.get("/settings", function(req, res) {
+	var process = require("process");
+	res.send(JSON.stringify(process.env));
+})
+*/
 
 router.get("/admin", function(req, res) {
 	return res.redirect(301, "/admin/users/");

@@ -9,6 +9,14 @@ config  = {
 	        host: 'devdb1.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
 	        database: 'WithinDevelopment',
 	        dialect : "mssql"
+	    },
+	    live: {
+			user : "within",
+			password : "Siy763zz=oN",
+			port: '1433',
+	        host: 'within.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
+	        database: 'Within',
+	        dialect : "mssql"
 	    }
 	},
 	admin : {
