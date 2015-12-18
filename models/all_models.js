@@ -978,7 +978,7 @@ module.exports = function(sequelize) {
         "defaultValue": null,
         "primaryKey": false
     },
-    "ShouldSendPushNotification": {
+    "ShouldSendPushNotifications": {
         "type": "BIT",
         "allowNull": false,
         "defaultValue": null,
@@ -1167,6 +1167,12 @@ module.exports = function(sequelize) {
         "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
+    },
+    "DateCreated": {
+        "type": "DATETIME",
+        "allowNull": true,
+        "defaultValue": "(getdate())",
+        "primaryKey": false
     }
 }, {tableName : "Feedbacks",  timestamps: false })};
 res.Messages.hasMany(res.Matches, {foreignKey: "NewestMessageID" } );
@@ -1213,10 +1219,10 @@ res.Entities.hasMany(res.TagInstances, {foreignKey: "OwnerID" } );
 res.TagInstances.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.Tags.hasMany(res.TagInstances, {foreignKey: "TagID" } );
 res.TagInstances.belongsTo(res.Tags, {foreignKey: "TagID" } );
-res.Entities.hasMany(res.Aliases, {foreignKey: "OwnerID" } );
-res.Aliases.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.EntityTypes.hasMany(res.Entities, {foreignKey: "EntityTypeID" } );
 res.Entities.belongsTo(res.EntityTypes, {foreignKey: "EntityTypeID" } );
+res.Entities.hasMany(res.Aliases, {foreignKey: "OwnerID" } );
+res.Aliases.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.Users.hasMany(res.UserRatings, {foreignKey: "RatedID" , as : "UserRatingsRated" } );
 res.UserRatings.belongsTo(res.Users, {foreignKey: "RatedID" , as : "UserRatingsRated" } );
 res.Users.hasMany(res.UserRatings, {foreignKey: "RaterID" , as : "UserRatingsRater" } );

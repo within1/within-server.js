@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "Main server code for Within.guru",
   "main": "within.js",
-  "repository" : "https://github.com/within1/within-server.js",
+  "repository": "https://github.com/within1/within-server.js",
   "scripts": {
     "start": "node within.js",
-    "test" : "mocha"
+    "test": "mocha"
   },
   "dependencies": {
     "async": "^1.5.0",
@@ -23,6 +23,7 @@
     "tedious": "^1.13.1"
   },
   "devDependencies": {
+    "dateformat": "^1.0.12",
     "mocha": "^2.3.4"
   }
 }

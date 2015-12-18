@@ -174,7 +174,7 @@ router.get("/admin/stats/*", function(req,res) {
 	// cparams define: [startdate,startdate,enddate];   byday defines resolution
 	var oneMonthEarlier = new Date(new Date() - (1000*60*60*24 * 30));
 	var cparams = [ dateToStr(oneMonthEarlier), dateToStr(oneMonthEarlier), dateToStr(new Date())];
-	var byday = 1;
+	var byday = 7;
 	// parse request parameters
 	var cd = req.params[0].split("/");
 	if ((cd.length > 0) && (cd[0].split("-").length == 3)) {
@@ -189,6 +189,10 @@ router.get("/admin/stats/*", function(req,res) {
 
 	var data = [];
 	var alldatasources = {
+		"# of users logged in" : function(cb) {
+			models.sequelize.query("select count(distinct UserID) as cnum, cdate from  ( select UserID, Datediff(day, ?, DateCreated ) as cdate from Events where DateCreated > ? and DateCreated < ?) as t group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
 		"Profile created" : function(cb) {
 			models.sequelize.query("select count(distinct ID) as cnum, cdate from (select ID, Datediff(day, ?, DateCreated ) as cdate from users where DateCreated > ? and DateCreated < ?) as t group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
@@ -223,7 +227,12 @@ where ( (firstcontact > ?) and (firstcontact < ?) and (contactback is null OR fi
 group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
+		"Number of contact cards shared" : function(cb) {
+			models.sequelize.query("select count(distinct interact) as cnum, cdate from \
+( select CONCAT(SenderID, '-',ReceiverID) as interact, Datediff(day, ?, DateCreated ) as cdate from Messages where DateCreated > ? and DateCreated < ? and Type = 2) as t group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 
+		},
 		"Number of thanks" : function(cb) {
 			cb(null,null);
 			/*
@@ -260,7 +269,8 @@ group by cdate",
 		var calcvals = {
 			"Reached out rate = Reach out / Received recommendation" : ["Reached out", "Received recommendation"],
 			"Response rate = Responded / Reach out" : ["Conversation (responded)", "Reached out"],
-			"Avg Conversation per recommendation" : ["Conversation (responded)", "Received recommendation"]
+			"Avg Conversation per recommendation" : ["Conversation (responded)", "Received recommendation"],
+			"Avg number of contact cards shared per user: Conversation / cards shared" : ["Conversation (responded)", "Number of contact cards shared"]
 		};
 		for (var i in calcvals) {
 			console.log(i);

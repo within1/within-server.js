@@ -1,6 +1,0 @@
-Infrastructure
--Setting up unit testing framework: mocha & should
--Elastic search on AWS
--web-based deployment from visual studio to iis
--basic unit test scaffold: sql server & elastic search
--API unit test: GetUserInformation

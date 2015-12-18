@@ -9,13 +9,13 @@ var APIlist = {"nodejs" : "http://127.0.2.2/api/legacy/", "legacy server" : "htt
 
 describe("infrastructure", function() {
 	// access the network with a 5 second timeout
-	this.timeout(5000);
+	this.timeout(15000);
 	describe("SQL Server", function() {
 		it("should connect", function() {
 			models  = require('../models');
 		});
 		it("should get first user", function(done) {
-			models.Users.findAll({limit:1}).then(function(res) { firstUser = res[0]; done(null); }).error(function(error) { done(error); });
+			models.Users.findAll({limit:3}).then(function(res) { firstUser = res[1]; done(null); }).error(function(error) { done(error); });
 		});
 	});
 
@@ -25,11 +25,20 @@ describe("infrastructure", function() {
 		});
 	});
 
+	var prevAPICalls = {};
+	var apicmp = function(funcname, data) {
+		if (prevAPICalls[funcname] == null)
+			prevAPICalls[funcname] = data;
+		assert.deepEqual(prevAPICalls[funcname], data);
+		return true;
+	};
+
 	var apitest = function(name, url) {
 		describe("API calls for "+name+" at "+url, function() {
 			describe("GetUserInformation", function() {
 				it("should reject invalid tokens", function(done) {
 					request({uri: url+"GetUserInformation", method: "POST", json : {"UserID" : "1", "UserToken" : "invalid"}}, function(error, res, body) {
+						assert.equal(error, null);
 						var infoResult = res["body"];
 						assert.equal(infoResult["GetUserInformationResult"]["Status"]["Status"], 0);
 						assert.equal(infoResult["GetUserInformationResult"]["Status"]["StatusMessage"], "Unauthorized");
@@ -38,10 +47,25 @@ describe("infrastructure", function() {
 					});
 				});
 				it("should respond with a full GetUserInformationResult for valid token", function(done) {
-					console.log(firstUser["Token"]);
 					request({uri: url+"GetUserInformation", method: "POST", json : {"UserID" : firstUser["ID"], "UserToken" : firstUser["Token"] }}, function(error, res, body) {
+						assert.equal(error, null);
 						var infoResult = res["body"];
-						console.log(infoResult);
+						console.log(res);
+						assert.notEqual(infoResult["GetUserInformationResult"]["Status"]["StatusMessage"], "Unauthorized");
+						assert.notEqual(infoResult["GetUserInformationResult"]["PrivateUserInformation"]["AppStatus"], 0);
+						assert.equal(infoResult["GetUserInformationResult"]["PrivateUserInformation"]["EmailAddress"], firstUser["EmailAddress"]);
+						apicmp("GetUserInformation", infoResult);
+						console.log(JSON.stringify(infoResult,0,4)) ;
+						return done(null);
+					});
+				});
+			});
+			describe("AddEditFacebookUser", function() {
+				it("should create new user", function(done) {
+					console.log(url);
+					request({uri: url+"AddEditFacebookUser", method: "POST", json : {"FacebookID" : "990952180947706" }}, function(error, res, body) {
+						var infoResult = res["body"];
+						// console.log(infoResult);
 						done(null);
 					});
 				});
@@ -49,7 +73,10 @@ describe("infrastructure", function() {
 		});
 	};
 
+	// apitest("legacy server" , "http://localhost:60033/");
+
 	apitest("legacy server" , "http://127.0.2.2/WithinWCF/" );
+	apitest("nodejs server" , "http://127.0.2.2/api/" );
 /*
 	for (var k in APIlist) {
 		apitest(k, APIlist[k]);
@@ -63,5 +90,3 @@ describe("infrastructure", function() {
 // comparison of API calls between legacy, and new API
 
 // Data integrity
-
-
