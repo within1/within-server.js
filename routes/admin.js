@@ -234,11 +234,10 @@ group by cdate",
 
 		},
 		"Number of thanks" : function(cb) {
-			cb(null,null);
-			/*
-			models.sequelize.query("",
+			models.sequelize.query("select count(distinct interact) as cnum, cdate from \
+				( select CONCAT(RaterID, '-',RatedID) as interact, Datediff(day, ? , DateCreated ) as cdate from UserRatings \
+					where DateCreated >  ? and DateCreated <  ? and isDeletedByRatedUser = 0) as t group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
-			*/
 		}
 	};
 	async.parallel(alldatasources,  function(err, data) {

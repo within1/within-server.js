@@ -12,12 +12,6 @@ router.use(compression({ threshold: 512}));
 
 router.get('/api', function(req, res) {
 	res.json({"description" : "within server API"});
-	/*
-	models.sequelize.query("SELECT * FROM users", { type: models.sequelize.QueryTypes.SELECT}).then(function(users) {
-		console.log("api request");
-		res.jsonp({"ok" : "ok", "data" : users});
-	});
-	*/
 });
 
 
