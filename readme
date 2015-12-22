@@ -19,3 +19,21 @@ Using forever is highly recommended for development:
 This will start the script, and monitor the folder for changes. Editing, and saving any file will immediately restart the script. This allows development cycle of: [editing some file] -> [ctrl/cmd]+s, [cmd/alt]+tab to chrome, f5 for page refresh, observe changes, [cmd/alt]+tab back to editor.
 
 ---------------------------------------
+
+Unit tests:
+
+We're using Mocha for unit tests; to run individual tests, use:
+
+> mocha test\GetContactCardDetails.js
+
+Parameters for the tests:
+--print    : verbose testing, prints out all API request/response JSON objects
+--url      : sets the URL to test againsts; default is http://dev.within.guru/WithinWCF/
+--compare  : compares the output of API call against another API
+
+For example, to test the development node.js server against the dev c# server, use:
+
+> mocha test\GetContactCardDetails.js --url http://dev.within.guru/WithinWCF/ --compare http://dev.within.guru/api/ --print
+
+---------------------------------------
+
