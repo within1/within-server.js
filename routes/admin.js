@@ -120,12 +120,34 @@ router.get("/admin/user/:userid", function(req, res) {
 				{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }] }
 			]}).then(function(data) { cb(null, data); })
 		},
-		// getting the reachouts, along with any feedback data
+		// getting the reachouts, along with response, and feedback data
 		"reachingout" : function(cb) {
-			models.sequelize.query("select * from Matches m join Users u on u.ID = m.OtherUserID where m.ReachingOutUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT} ).then(function(res) { cb(null,res ); });
+			models.sequelize.query("select m.MatchRationale, cmt.Comments, u.*, u.ID as ouid, msg.* from Matches m join Users u on u.ID = m.OtherUserID \
+outer apply (select top 1 * from UserRatings where \
+ ( \
+  (RaterID = m.OtherUserID and RatedID = m.ReachingOutUserID) OR \
+  (RaterID = m.ReachingOutUserID and RatedID = m.OtherUserID ) \
+  ) and (isDeletedByRatedUser = 0)  \
+ ) as cmt   \
+outer apply (select count(id) as msgcnt from Messages where  \
+  (SenderID = m.OtherUserID and ReceiverID = m.ReachingOutUserID) OR \
+  (SenderID  = m.ReachingOutUserID and ReceiverID = m.OtherUserID ) \
+ ) as msg \
+where m.ReachingOutUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT} ).then(function(res) { cb(null,res ); });
 		},
 		"matchedwith" : function(cb) {
-			models.sequelize.query("select * from Matches m join Users u on u.ID = m.ReachingOutUserID where m.OtherUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT} ).then(function(res) { cb(null,res ); });
+			models.sequelize.query("select m.MatchRationale, cmt.Comments, u.*, u.ID as ouid, msg.* from Matches m join Users u on u.ID = m.ReachingOutUserID \
+outer apply (select top 1 * from UserRatings where \
+ ( \
+  (RaterID = m.OtherUserID and RatedID = m.ReachingOutUserID) OR \
+  (RaterID = m.ReachingOutUserID and RatedID = m.OtherUserID ) \
+  ) and (isDeletedByRatedUser = 0)  \
+ ) as cmt   \
+outer apply (select count(id) as msgcnt from Messages where  \
+  (SenderID = m.OtherUserID and ReceiverID = m.ReachingOutUserID) OR \
+  (SenderID  = m.ReachingOutUserID and ReceiverID = m.OtherUserID ) \
+ ) as msg \
+where m.OtherUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT} ).then(function(res) { cb(null,res ); });
 		}
 	}, function(err, resdata) {
 		data = resdata["user"];
@@ -149,6 +171,17 @@ router.get("/admin/user/:userid", function(req, res) {
 			else if (data["Entity"]["TagInstances"][i]["Type"] == 3)
 				resdata["Interests"].push(data["Entity"]["TagInstances"][i]);
 		}
+		for (var i in resdata["reachingout"]) {
+			if (resdata["reachingout"][i]["MatchRationale"] !== undefined)
+				resdata["reachingout"][i]["MatchRationale"] = resdata["reachingout"][i]["MatchRationale"].split("\n").join("<br />\n");
+
+		}
+		for (var i in resdata["matchedwith"]) {
+			if (resdata["matchedwith"][i]["MatchRationale"] !== undefined)
+				resdata["matchedwith"][i]["MatchRationale"] = resdata["matchedwith"][i]["MatchRationale"].split("\n").join("<br />\n");
+
+		}
+		//  return res.json(resdata["matchedwith"]);
 		var output = Mustache.render(fs.readFileSync("./routes/admin_usersingle.html", "utf8"), resdata);
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 		res.send(framed);

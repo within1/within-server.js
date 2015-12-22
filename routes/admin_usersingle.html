@@ -26,34 +26,31 @@
 <h3>Interested in:</h3>
 {{#Interests}}<a href="/admin/users/skill/{{TagID}}">{{Tag.Name}}</a>&nbsp;&nbsp;{{/Interests}}
 
-<!--
-
 <h3>Reaching out to:</h3>
-<table style="color:#000;max-width: 600px;" >
-	<thead><tr><th>With</th><th>Rationale</th><th>Action taken</th><th>Thanks given</th></tr></thead>
+<table style="color:#000;" >
+	<thead><tr><th>With</th><th>Rationale</th><th># Messages</th><th>Thanks given</th></tr></thead>
 	<tbody>
 {{#reachingout}}
-<tr><td><a href="/admin/user/{{ID}}">{{FirstName}} {{LastName}}</a></td>
-	<td>{{MatchRationale}}</td>
-<td></td>
-<td></td>
+<tr><td valign="top"><a href="/admin/user/{{ouid}}">{{FirstName}} {{LastName}}</a></td>
+	<td>{{{MatchRationale}}}</td>
+<td>{{msgcnt}}</td>
+<td>{{Comments}}</td>
 </tr>
 {{/reachingout}}
 	</tbody>
 </table>
 <br />
 <h3>Matched as recipient:</h3>
-<table style="color:#000;max-width: 600px;" >
-	<thead><tr><th>With</th><th>Rationale</th><th>Action taken</th><th>Thanks given</th></tr></thead>
+<table style="color:#000;" >
+	<thead><tr><th>With</th><th>Rationale</th><th># Messages</th><th>Thanks given</th></tr></thead>
 	<tbody>
 {{#matchedwith}}
-<tr><td><a href="/admin/user/{{ID}}">{{FirstName}} {{LastName}}</a></td>
-	<td>{{MatchRationale}}</td>
-<td></td>
-<td></td>
+<tr><td valign="top"><a href="/admin/user/{{ouid}}">{{FirstName}} {{LastName}}</a></td>
+	<td>{{{MatchRationale}}}</td>
+<td>{{msgcnt}}</td>
+<td>{{Comments}}</td>
 </tr>
 {{/matchedwith}}
 	</tbody>
 </table>
 <br />
--->
