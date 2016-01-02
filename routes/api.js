@@ -182,7 +182,7 @@ function getPublicUserInfo(userid, includePrivate) {
 	})
 	.then(function() { return getLatestUserThankYous(userid); })
 	.then(function(latest) {
-		resdata["PublicUserInformation"]["GetLatestUserThankYous"] = [latest];
+		resdata["PublicUserInformation"]["GetLatestUserThankYous"] = latest;
 		return resdata;
 	});
 }
