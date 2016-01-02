@@ -8,7 +8,7 @@ var compression = require('compression');
 var dateFormat = require('dateformat');
 var Promise = require('bluebird');
 
-router.use(bodyParser.json({type : "*/*"}));
+router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
 
 router.get('/api', function(req, res) {
