@@ -15,7 +15,7 @@ app.use(compression({ threshold: 512 }));
 app.use('/static/', express.static(__dirname + '/static/'));
 
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // apply sessions
@@ -33,6 +33,7 @@ app.use(session({
 app.use(function(req, res, next) {
   console.log("Requested URL: ",req.url);
   console.log("Requested POST Data: ",JSON.stringify(req.body,0,4));
+  console.log("Requested")
   next();
 });
 
