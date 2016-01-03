@@ -312,7 +312,7 @@ router.post("/api/GetMessageThread", function(req, res) {
 
 
 // add user to waitlist & send email notification for within team
-router.post("/api/AddUserToWaitlist", function(res, res) {
+router.post("/api/AddUserToWaitlist", function(req, res) {
 	var cuser = null;
 	apilib.requireParameters(req, ["UserToken", "UserID"])
 	.then(function() { return apilib.validateToken(req.body["UserID"], req.body["UserToken"]); })
@@ -323,8 +323,8 @@ router.post("/api/AddUserToWaitlist", function(res, res) {
 		return authuser.save();
 	})
 	.then(function(authuser) {
-		// update Incomplete Onboarding Notification
-		return models.Notification.findOne({where : {ID : cuser["IncompleteOnboardingEmailNotificationID"] }});
+		// update Incomplete Onboarding Notifications
+		return models.Notifications.findOne({where : {ID : cuser["IncompleteOnboardingEmailNotificationID"] }});
 	})
 	.then(function(notifs) {
 		if (notifs != null) {
