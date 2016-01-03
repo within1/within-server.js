@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var compression = require('compression');
 var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
+var dateFormat = require('dateformat');
+
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -262,4 +264,84 @@ router.post('/api/GetContactCardDetails', function(req, res) {
 	});
 });
 
+// get message thread with a single other user
+router.post("/api/GetMessageThread", function(req, res) {
+	var msgres = {};
+	var allmsgs = null;
+	apilib.requireParameters(req, ["UserID", "UserToken", "SenderID", "MessageCount"])
+	.then(function() { return apilib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(userdata) {
+		return models.Messages.findAll({where: {$or : [
+				{ SenderID : req.body["SenderID"], ReceiverID : req.body["UserID"]},
+				{ SenderID : req.body["UserID"], ReceiverID : req.body["SenderID"]}
+			] },
+			order : [ ["ID" , "DESC"] ]
+		});
+	})
+	.then(function(msglist) {
+		//Has a "Thank You" been given by the User referenced by SenderID?
+		allmsgs = msglist;
+		return models.UserRatings.findAll({where: {RatedID : req.body["UserID"], RaterID : req.body["SenderID"]  }});
+	})
+	.then(function(ratelist) {
+		msgres["IsAlreadyRated"] = (ratelist.length > 0)?(1):(0);
+		msgres["IsUnreadMessages"] = false;
+		var culist = [];
+		for (var i in allmsgs) {
+			if (!allmsgs[i]["HasRead"]) {
+				msgres["IsUnreadMessages"] = true;
+			}
+			if (culist.indexOf(msgres["SenderID"]))
+				culist.push(msgres["SenderID"]);
+		}
+		//Only valid for Thank you if back and forth messaging
+		msgres["IsValidForThankYou"] = (culist.length < 2)?(0):(1);
+		msgres = apilib.formatAPICall(msgres);
+		msgres["MesssageList"] = allmsgs;
+	})
+	.then(function() {
+		msgres["Status"] = {"Status" : 1, "StatusMessage" : "" };
+		res.json({"GetMessageThreadResult" : msgres });
+	})
+	.catch(function(e) {
+		console.error(e);
+		res.json({"GetMessageThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+});
+
+
+
+// add user to waitlist & send email notification for within team
+router.post("/api/AddUserToWaitlist", function(res, res) {
+	var cuser = null;
+	apilib.requireParameters(req, ["UserToken", "UserID"])
+	.then(function() { return apilib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
+		cuser = authuser;
+		authuser["AppStatus"] = 1;
+		authuser["DateAppStatusModified"] = dateFormat(new Date(), "isoUtcDateTime");
+		return authuser.save();
+	})
+	.then(function(authuser) {
+		// update Incomplete Onboarding Notification
+		return models.Notification.findOne({where : {ID : cuser["IncompleteOnboardingEmailNotificationID"] }});
+	})
+	.then(function(notifs) {
+		if (notifs != null) {
+			return notifs.update({"HasSent" : true});
+		}
+	})
+	.then(function() {
+		console.log("notification to within team");
+		res.json({"GetAddUserToWaitlistResult" : {"Status" : {"Status" : 1, "StatusMessage" : "" }}  });
+	})
+	.catch(function(e) {
+		console.error(e);
+		res.json({"GetMessageThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+})
+
+
 module.exports = router;
+
+
