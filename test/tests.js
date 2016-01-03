@@ -26,6 +26,10 @@ module.exports = function(name, testData) {
 	            		console.log(JSON.stringify(error,0,4));
 	            		return done(error);
 	            	}
+	            	if (res.statusCode != 200) {
+	            		console.log("Result statuscode: "+res.statusCode);
+	            		return done("invalid statuscode "+res.statusCode);
+	            	}
 	            	if (debug)
 	                	console.log(JSON.stringify(body,0,4));
 	                if (!compare)

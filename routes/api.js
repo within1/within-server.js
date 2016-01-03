@@ -5,8 +5,8 @@ var router  = express.Router();
 var models  = require('../models');
 var bodyParser = require('body-parser');
 var compression = require('compression');
-var dateFormat = require('dateformat');
 var Promise = require('bluebird');
+var apilib = require("../lib/apilib.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -27,41 +27,14 @@ function copyValues(source, vals) {
 	return res;
 }
 
-// formats API call results per specification:
-// Null parameters are interpreted as “there is no update for the parameter”; empty parameters (e.g. an empty array or an empty string) are interpreted as “the parameter should be updated to an empty value”
-// Date response parameters are in “MM/DD/YYYY HH:MM:SS” format
-function formatAPICall(data, datecols) {
-	for (var k in data) {
-		if (data[k] === true)
-			data[k] = "True";
-		else if (data[k] === false)
-			data[k] = "False";
-		else if (datecols.indexOf(k) != -1)
-			data[k] = dateFormat(data[k], "mm/dd/yyyy HH:MM:ss");
-		else if (data[k] == null)
-			data[k] = "";
-		else
-			data[k] = data[k].toString();
-	}
-	return data;
-}
-
-var requireParameters = Promise.promisify(function(req, paramlist, cb) {
-	paramlist.forEach(function(c) {
-		if (req.body[c] === undefined)
-			throw  c+" parameter was either null or an empty string. A valid "+c+" is required";
-	});
-	cb(null);
-});
-
 function copyPrivateUserInfo(userdata) {
 	var vals = copyValues(userdata, ["AppStatus",  "DateAppStatusModified",  "DateLastActivity",  "DeviceToken",  "EmailAddress",  "FacebookID",  "IsAdmin",  "LinkedInID",  "ShouldSendEmailNotifications",  "ShouldSendPushNotifications",  "Token"] );
-	return formatAPICall(vals, ["DateAppStatusModified", "DateLastActivity"]);
+	return apilib.formatAPICall(vals, ["DateAppStatusModified", "DateLastActivity"]);
 }
 
 function copyPublicUserInfo(userdata) {
 	var vals = copyValues(userdata, ["AboutUser", "Birthday", "DateCreated", "DateModified", "FirstName", "Gender", "ID", "ImageURL", "IsTeamWithin", "LastName", "Locale", "Timezone", "Title" ] );
-	return formatAPICall(vals, ["Birthday", "DateCreated", "DateModified"]);
+	return apilib.formatAPICall(vals, ["Birthday", "DateCreated", "DateModified"]);
 }
 
 function getUserTags(userdata, tagtype) {
@@ -72,7 +45,7 @@ function getUserTags(userdata, tagtype) {
 	}
 	var res = [];
 	for (var i in cue) {
-		res.push(formatAPICall({"DateCreated" : cue[i]["DateCreated"], "DateModified" : cue[i]["DateModified"], "ID" : cue[i]["ID"],
+		res.push(apilib.formatAPICall({"DateCreated" : cue[i]["DateCreated"], "DateModified" : cue[i]["DateModified"], "ID" : cue[i]["ID"],
 			"TagName" : cue[i]["Tag"]["Name"], "TagType" : cue[i]["Type"], "UserID" : userdata["ID"]  },
 			["DateCreated", "DateModified"] ));
 	}
@@ -84,7 +57,7 @@ function copyUserLocations(userdata) {
 	for (var i in userdata["UserLocations"]) {
 		var k = copyValues(userdata["UserLocations"][i], ["DateCreated", "DateModified", "Description", "ID", "JourneyIndex", "LocationType", "UserID"]);
 		k["Name"] = userdata["UserLocations"][i]["Location"]["Name"];
-		cul.push(formatAPICall(k, ["DateCreated", "DateModified"]));
+		cul.push(apilib.formatAPICall(k, ["DateCreated", "DateModified"]));
 	}
 	return cul;
 }
@@ -93,7 +66,7 @@ function copyUserEducation(userdata) {
 	var cul = [];
 	for (var i in userdata["UserEducations"]) {
 		var k = copyValues(userdata["UserEducations"][i], ["DateCreated", "DateModified", "Degree", "Description", "EndMonth", "EndYear", "ID", "JourneyIndex", "Major", "StartMonth", "StartYear", "UserID", "Name"]);
-		cul.push(formatAPICall(k, ["DateCreated", "DateModified"]));
+		cul.push(apilib.formatAPICall(k, ["DateCreated", "DateModified"]));
 	}
 	return cul;
 }
@@ -105,7 +78,7 @@ function copyUserEmployment(userdata) {
 		var k = copyValues(userdata["UserEmployments"][i], ["DateCreated", "DateModified", "Summary", "Title", "EndMonth", "EndYear", "ID", "JourneyIndex", "StartMonth", "StartYear", "UserID" ]);
 		k["EmployerName"] = userdata["UserEmployments"][i]["Name"];
 		k["Location"] = userdata["UserEmployments"][i]["Location"]["Name"];
-		cul.push(formatAPICall(k, ["DateCreated", "DateModified"]));
+		cul.push(apilib.formatAPICall(k, ["DateCreated", "DateModified"]));
 	}
 	return cul;
 }
@@ -132,22 +105,12 @@ function getLatestUserThankYous(userid) {
 		res["NumbersOfStars"] = ratinglist[0]["Rating"];
 		res["RatingUserID"] = ratinglist[0]["RaterID"];
 		res["UserID"] = ratinglist[0]["RatedID"];
-		res = formatAPICall(res, ["DateCreated"] );
+		res = apilib.formatAPICall(res, ["DateCreated"] );
 		res["UserDetail"] = copyValues(ratinglist[0]["UserRatingsRater"], ["FirstName", "ImageURL", "LastName"]);
 		res["UserDetail"]["ID"] = ratinglist[0]["UserRatingsRater"]["UserID"];
-		res["UserDetail"] = formatAPICall(res["UserDetail"], []);
-		return res;
+		res["UserDetail"] = apilib.formatAPICall(res["UserDetail"], []);
+		return [res];
 	})
-}
-
-// validates the passed in tokens; returns with the user's model
-function validateToken(userid, usertoken) {
-	return models.Users.findAll({where: {ID : userid, Token : usertoken}})
-	.then(function(userlist) {
-		if (userlist.length == 0)
-			throw "Valid token required";
-		return userlist[0];
-	});
 }
 
 // returns with the public information of the user
@@ -187,20 +150,15 @@ function getPublicUserInfo(userid, includePrivate) {
 	});
 }
 
-
-function UpdateUserActivityAndNotifications(userid) {
-
-}
-
 router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 	var usermodel = null;
-	requireParameters(req, ["FacebookID", "DeviceToken"])
+	apilib.requireParameters(req, ["FacebookID", "DeviceToken"])
 	.then(function() {
 		return models.Users.findAll({where : { FacebookID : req.body["FacebookID"] }})
 	})
 	.then(function(userdata) {
 		if (userdata.length == 0) {
-			var resmsg = formatAPICall({"IsExistingUser" : false});
+			var resmsg = apilib.formatAPICall({"IsExistingUser" : false});
 			resmsg["Status"] = { "Status": "1", "StatusMessage": "" };
 			return res.json({"CheckForUserFromFacebookIDResult" : resmsg} );
 		}
@@ -266,18 +224,8 @@ router.post('/api/AddEditFacebookUser', function(req, res) {
 
 
 router.post('/api/GetUserInformation', function(req, res) {
-	requireParameters(req, ["UserToken", "UserID"])
-	.then(function() {
-		// validate token
-		return models.sequelize.query("SELECT * FROM users u where ID = ? and Token = ?",
-				{ replacements: [req.body["UserID"], req.body["UserToken"] ] , type: models.sequelize.QueryTypes.SELECT})
-	})
-	.then(function(authdata) {
-		if (authdata.length == 0) {
-			throw "Unauthorized";
-		}
-		return true;
-	})
+	apilib.requireParameters(req, ["UserToken", "UserID"])
+	.then(function() { return apilib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function() { return getPublicUserInfo(req.body["UserID"], true); })
 	.then(function(userinfo) {
 		console.log("post getPublicUserInfo",userinfo);
@@ -291,16 +239,9 @@ router.post('/api/GetUserInformation', function(req, res) {
 
 router.post('/api/GetContactCardDetails', function(req, res) {
 	var resdata = {};
-	requireParameters(req, ["UserToken", "UserID"])
-	.then(function() {
-		// validate token
-		return models.sequelize.query("SELECT * FROM users u where ID = ? and Token = ?",
-				{ replacements: [req.body["UserID"], req.body["UserToken"] ] , type: models.sequelize.QueryTypes.SELECT})
-	})
-	.then(function(authdata) {
-		if (authdata.length == 0) {
-			throw "Unauthorized";
-		}
+	apilib.requireParameters(req, ["UserToken", "UserID"])
+	.then(function() { return apilib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
 		return models.Users.findById(req.body["OtherUserID"], {include: [
 			{ model : models.UserContactCards, separate: true },
 		]});
@@ -311,7 +252,7 @@ router.post('/api/GetContactCardDetails', function(req, res) {
 		if (carddata["UserContactCards"].length == 0)
 			throw "No records found!";
 		var c = carddata["UserContactCards"][0];
-		var apires = formatAPICall(c, ["DateCreated", "DateModified"]);
+		var apires = apilib.formatAPICall(c, ["DateCreated", "DateModified"]);
 		res.json({"GetContactCardDetailsResult" : {"GetContactCardDetail" : apires, "Status" : { "Status": "1", "StatusMessage": "" }}});
 		// UpdateUserActivityAndNotifications
 	})

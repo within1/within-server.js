@@ -1,6 +1,9 @@
 Main server code for Within.guru
 
 To run locally:
+-Install Node.js [ https://nodejs.org/en/ ]
+-Install Imagemagick [ http://www.imagemagick.org/script/binary-releases.php ]
+-make sure imagemagick's binaries are available to call on a command line
 
 > git clone [..]
 > npm install

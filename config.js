@@ -28,7 +28,8 @@ config  = {
 			host : "https://search-within-elastic-ktdabzbnfoyonuwjch3cmrvkya.us-west-1.es.amazonaws.com/",
 			index : "within-dev"
 		}
-	}
+	},
+	imagedir : "..\\within-images\\"
 };
 
 module.exports = config;
