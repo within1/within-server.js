@@ -33,12 +33,58 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "Sessions",  timestamps: false }), 
+	"Events" : sequelize.define("Events",{
+    "ID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true,
+        "autoIncrement": true
+    },
+    "DateCreated": {
+        "type": "DATETIME",
+        "allowNull": false,
+        "defaultValue": "(getdate())",
+        "primaryKey": false
+    },
+    "UserID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true
+    },
+    "EventName": {
+        "type": "VARCHAR",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "ParamInt": {
+        "type": "BIGINT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "ParamStr": {
+        "type": "VARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "ParamStr2": {
+        "type": "VARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    }
+}, {tableName : "Events",  timestamps: false }), 
 	"Matches" : sequelize.define("Matches",{
     "ID": {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -136,7 +182,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -192,7 +239,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -284,7 +332,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -370,7 +419,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -414,7 +464,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -542,7 +593,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "UserID": {
         "type": "BIGINT",
@@ -592,7 +644,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -624,7 +677,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -650,7 +704,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "Name": {
         "type": "NVARCHAR",
@@ -682,7 +737,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "TagID": {
         "type": "BIGINT",
@@ -720,7 +776,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "Name": {
         "type": "NVARCHAR",
@@ -746,7 +803,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "OwnerID": {
         "type": "BIGINT",
@@ -766,7 +824,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "EntityTypeID": {
         "type": "TINYINT",
@@ -794,7 +853,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "ReferralCode": {
         "type": "NVARCHAR",
@@ -808,7 +868,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "RaterID": {
         "type": "BIGINT",
@@ -852,7 +913,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "DateCreated": {
         "type": "DATETIME",
@@ -910,7 +972,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "EntityID": {
         "type": "BIGINT",
@@ -1110,7 +1173,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "ReachingOutTagID": {
         "type": "BIGINT",
@@ -1136,7 +1200,8 @@ module.exports = function(sequelize) {
         "type": "BIGINT",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": true
+        "primaryKey": true,
+        "autoIncrement": true
     },
     "UserID": {
         "type": "BIGINT",
@@ -1175,6 +1240,8 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "Feedbacks",  timestamps: false })};
+res.Users.hasMany(res.Events, {foreignKey: "UserID" } );
+res.Events.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Messages.hasMany(res.Matches, {foreignKey: "NewestMessageID" } );
 res.Matches.belongsTo(res.Messages, {foreignKey: "NewestMessageID" } );
 res.Notifications.hasMany(res.Matches, {foreignKey: "MatchExpiringEmailNotificationID" , as : "MatchesMatchExpiringEmailNotification" } );
@@ -1207,22 +1274,22 @@ res.Users.hasMany(res.Messages, {foreignKey: "ReceiverID" , as : "MessagesReceiv
 res.Messages.belongsTo(res.Users, {foreignKey: "ReceiverID" , as : "MessagesReceiver" } );
 res.Users.hasMany(res.Messages, {foreignKey: "SenderID" , as : "MessagesSender" } );
 res.Messages.belongsTo(res.Users, {foreignKey: "SenderID" , as : "MessagesSender" } );
+res.Entities.hasMany(res.Employers, {foreignKey: "EntityID" } );
+res.Employers.belongsTo(res.Entities, {foreignKey: "EntityID" } );
 res.Locations.hasMany(res.UserLocations, {foreignKey: "LocationID" } );
 res.UserLocations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
 res.Users.hasMany(res.UserLocations, {foreignKey: "UserID" } );
 res.UserLocations.belongsTo(res.Users, {foreignKey: "UserID" } );
-res.Entities.hasMany(res.Employers, {foreignKey: "EntityID" } );
-res.Employers.belongsTo(res.Entities, {foreignKey: "EntityID" } );
 res.Entities.hasMany(res.Schools, {foreignKey: "EntityID" } );
 res.Schools.belongsTo(res.Entities, {foreignKey: "EntityID" } );
 res.Entities.hasMany(res.TagInstances, {foreignKey: "OwnerID" } );
 res.TagInstances.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.Tags.hasMany(res.TagInstances, {foreignKey: "TagID" } );
 res.TagInstances.belongsTo(res.Tags, {foreignKey: "TagID" } );
-res.EntityTypes.hasMany(res.Entities, {foreignKey: "EntityTypeID" } );
-res.Entities.belongsTo(res.EntityTypes, {foreignKey: "EntityTypeID" } );
 res.Entities.hasMany(res.Aliases, {foreignKey: "OwnerID" } );
 res.Aliases.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
+res.EntityTypes.hasMany(res.Entities, {foreignKey: "EntityTypeID" } );
+res.Entities.belongsTo(res.EntityTypes, {foreignKey: "EntityTypeID" } );
 res.Users.hasMany(res.UserRatings, {foreignKey: "RatedID" , as : "UserRatingsRated" } );
 res.UserRatings.belongsTo(res.Users, {foreignKey: "RatedID" , as : "UserRatingsRated" } );
 res.Users.hasMany(res.UserRatings, {foreignKey: "RaterID" , as : "UserRatingsRater" } );

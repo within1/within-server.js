@@ -10,7 +10,8 @@ models.sequelize.query("SELECT * FROM information_schema.tables", { type: models
     allnames[index] = res["TABLE_NAME"];
     alltables[res["TABLE_NAME"]] = res;
 		return models.sequelize.getQueryInterface().describeTable(res["TABLE_NAME"]).then(function(descr, index) {
-      // console.log(descr, index);
+      if ((descr["ID"] !== undefined) && (descr["ID"]["type"] == "BIGINT"))
+        descr["ID"]["autoIncrement"] = true;
       alldescr[cname] = descr;
       return cname;
     }).then(function(cname , cb) {
