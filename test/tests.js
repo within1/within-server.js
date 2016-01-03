@@ -27,11 +27,27 @@ module.exports = function(name, testData) {
 	            		return done(error);
 	            	}
 	            	if (res.statusCode != 200) {
-	            		console.log("Result statuscode: "+res.statusCode);
+	            		console.error("Result statuscode: "+res.statusCode);
+	            		console.error(body);
 	            		return done("invalid statuscode "+res.statusCode);
 	            	}
 	            	if (debug)
 	                	console.log(JSON.stringify(body,0,4));
+	                // check against expectations
+	                var checkResults = function(expect, ctree) {
+	                	for (var k in expect) {
+	                		if (ctree[k] === undefined)
+	                			return k+" not found in "+JSON.stringify(body,0,4);
+	                		if (expect[k] instanceof Object) {
+	                			return checkResults(expect[k], ctree[k]);
+	                		}
+	                		assert.equal(ctree[k], expect[k]);
+	                	}
+	                	return "";
+	                };
+	                var chkres = checkResults(cm["expect"], body);
+	                if (chkres != "")
+	                	return done(chkres);
 	                if (!compare)
 		                return done(null);
 		            // compare with other API's URL
