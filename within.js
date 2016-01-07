@@ -33,7 +33,6 @@ app.use(session({
 app.use(function(req, res, next) {
   console.log("Requested URL: ",req.url);
   console.log("Requested POST Data: ",JSON.stringify(req.body,0,4));
-  console.log("Requested")
   next();
 });
 

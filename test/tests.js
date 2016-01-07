@@ -5,7 +5,7 @@ var argv = require('minimist')(process.argv.slice(2));
 console.log(argv);
 
 module.exports = function(name, testData) {
-	var url = "http://dev.within.guru/WithinWCF/";
+	var url = "http://127.0.2.2/api/";
 	var compare = null;
 	var debug = false;
 	if (argv["url"] !== undefined)

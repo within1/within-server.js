@@ -85,6 +85,27 @@ function copyUserEmployment(userdata) {
 	return cul;
 }
 
+
+// returns the user info in DB storable format from an AddEditFacebookUser JSON request
+function getUserModelInfo(json) {
+	return copyValues(json, ["FirstName", "LastName", "EmailAddress", "FacebookID", "Gender", "ShouldSendPushNotification", "ShouldSendEmailNotifications", "Birthday", "DeviceToken"]);
+}
+
+// returns Promise<ID> for given location's name; auto-creates location, if not found
+function getLocationID(name) {
+	return models.Locations.findOne({where : {"Name" : name} })
+	.then(function(locationModel) {
+		if (locationModel != null) {
+			return locationModel;
+		}
+		// create new location
+		return models.Locations.create({"DateCreated" : dateFormat(new Date(), "isoUtcDateTime"), "Name" : name, "Coordinates" : "" });
+	})
+	.then(function(locationModel) {
+		return locationModel["ID"];
+	})
+}
+
 // returns the number of thankyous for a user
 function getNumberOfThankYous(userid) {
 	return models.sequelize.query('SELECT count(distinct RaterID) as cnt FROM UserRatings where RatedID = ? and isDeletedByRatedUser = 0',{ replacements: [ userid ] , type: models.sequelize.QueryTypes.SELECT})
@@ -102,7 +123,6 @@ function getLatestUserThankYous(userid) {
 	.then(function(ratinglist) {
 		if (ratinglist.length == 0)
 			return [];
-		console.log("qwe", ratinglist[0]);
 		var res = copyValues(ratinglist[0], ["ID", "Comments", "DateCreated"]);
 		res["NumbersOfStars"] = ratinglist[0]["Rating"];
 		res["RatingUserID"] = ratinglist[0]["RaterID"];
@@ -194,8 +214,86 @@ var findUserFromRequestBody = function(req) {
 	throw "Unknown ID";
 };
 
+
+// creates a new user
+function createNewUser(req) {
+	// add new user
+	console.log("New user creation");
+	var centity = null;
+	var usermodel = null;
+	return models.Entities.create({"EntityTypeID" : 1})
+	.then(function(newEntity) {
+		centity = newEntity;
+		return models.Referrals.create({"ReferralCode" : "dummy code"});
+	})
+	.then(function(newref) {
+		var userinfo = getUserModelInfo(req.body);
+		userinfo["DateCreated"] = dateFormat( new Date(), "isoUtcDateTime");
+		userinfo["DateModified"] = dateFormat( new Date(), "isoUtcDateTime");
+		userinfo["DateLastActivity"] = dateFormat( new Date(), "isoUtcDateTime");
+		userinfo["EntityID"] = centity["ID"];
+		userinfo["IsAdmin"] = 0;
+		userinfo["AppStatus"] = 0;
+		userinfo["NumberOfFlags"] = 0;
+		userinfo["NumberOfFlagsGiven"] = 0;
+		userinfo["IsTeamWithin"] = 0;
+		userinfo["ReferralID"] = newref["ID"];
+		userinfo["DateAppStatusModified"] = dateFormat( new Date(), "isoUtcDateTime");
+		userinfo["Token"] = "tester tests";
+		if (userinfo["ShouldSendEmailNotifications"] === undefined)
+			userinfo["ShouldSendEmailNotifications"] = (req.body["ShouldSendEmailNotifications"] === undefined)?("1"):(req.body["ShouldSendEmailNotifications"]);
+		if (userinfo["ShouldSendPushNotifications"] === undefined)
+			userinfo["ShouldSendPushNotifications"] = (req.body["ShouldSendPushNotification"] === undefined)?("1"):(req.body["ShouldSendPushNotification"]);
+		return models.Users.create(userinfo);
+	})
+	.then(function(cuser) {
+		usermodel = cuser;
+		console.log("Device token: ",req.body["DeviceToken"]);
+		// remove this devicetokens from all other users
+		if ((req.body["DeviceToken"] == null) || (req.body["DeviceToken"] == ""))
+			return;
+		return models.sequelize.query('update users set DeviceToken = null where DeviceToken = ? and ID != ?',{ replacements: [ req.body["DeviceToken"], usermodel["ID"] ] , type: models.sequelize.QueryTypes.UPDATE})
+	})
+	.then(function() {
+		return usermodel;
+	})
+}
+
+// parallel updating of all user-related info
+function updateUser(usermodel, req) {
+	var updateOps = [];
+	// update locations
+	if ( (req.body["UserLocation"] != undefined) && (req.body["UserLocation"] != null)) {
+		updateOps.push(
+			models.UserLocations.destroy({where: {"UserID" : usermodel["ID"]}})
+			.then(function(locid) {
+				// get all the location IDs
+				return Promise.map(req.body["UserLocation"], function(loc) {
+					return getLocationID(loc["Name"]);
+				})
+				.then(function(ids) {
+					console.log("location IDs: ",ids);
+					var newuserlocs = [];
+					for (var i in req.body["UserLocation"]) {
+						var cloc = copyValues(req.body["UserLocation"][i], ["LocationType", "JourneyIndex"]);
+						cloc["LocationID"] = ids[i];
+						cloc["UserID"] = usermodel["ID"];
+						cloc["DateCreated"] = dateFormat( new Date(), "isoUtcDateTime");
+						cloc["DateModified"] = dateFormat( new Date(), "isoUtcDateTime");
+						newuserlocs.push(cloc);
+					}
+					return models.UserLocations.bulkCreate(newuserlocs);
+				});
+			})
+		);
+	}
+	// execute all updates
+	return Promise.all(updateOps);
+}
+
 router.post('/api/AddEditFacebookUser', function(req, res) {
 	var resdata = {};
+	var userid = -1;
 	// authenticate user
 	findUserFromRequestBody(req)
 	// check for new user creation
@@ -203,23 +301,24 @@ router.post('/api/AddEditFacebookUser', function(req, res) {
 		if (userlist.length > 1)
 			throw "Multiple registered users for same Facebook ID";
 		else if (userlist.length == 1)
+			// Authenticate user
 			return userlist[0];
-		throw "New user registration";
-		// generate new user
+		// add new user
+		return createNewUser(req);
 	})
-	// Authenticate user
+	// update user information
 	.then(function(usermodel) {
-		console.log("asd", usermodel["ID"]);
-		// if ((usermodel.Token != "") && ((req.body[""]))
-		return usermodel;
+		userid = usermodel["ID"];
+		return updateUser(usermodel, req);
 	})
-	.then(function(usermodel) { return getPublicUserInfo(usermodel["ID"], true); })
+	.then(function() { return getPublicUserInfo(userid, true); })
 	.then(function(userinfo) {
 		userinfo["Status"] = {"Status" : "1", "StatusMessage" : "" };
 		res.json({"AddEditFacebookUserResult" : userinfo });
 	})
 	.catch(function(e) {
 		console.error(e.toString() );
+		console.error(e.stack);
 		res.json({"AddEditFacebookUserResult" : {"Status" : {"Status" : "0", "StatusMessage" : e.toString() }}});
 	});
 });
@@ -235,6 +334,7 @@ router.post('/api/GetUserInformation', function(req, res) {
 		res.json({"GetUserInformationResult" : userinfo } );
 	}).catch(function(e) {
 		console.error(e);
+		console.error(e.stack);
 		res.json({"GetUserInformationResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
 	});
 });
@@ -260,6 +360,7 @@ router.post('/api/GetContactCardDetails', function(req, res) {
 	})
 	.catch(function(e) {
 		console.log(e);
+		console.error(e.stack);
 		res.json({"GetContactCardDetailsResult" : {"Status" : {"Status" : "0", "StatusMessage" : e.toString() }}});
 	});
 });
@@ -305,6 +406,7 @@ router.post("/api/GetMessageThread", function(req, res) {
 	})
 	.catch(function(e) {
 		console.error(e);
+		console.error(e.stack);
 		res.json({"GetMessageThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
 	});
 });
@@ -333,11 +435,12 @@ router.post("/api/AddUserToWaitlist", function(req, res) {
 	})
 	.then(function() {
 		console.log("notification to within team");
-		res.json({"GetAddUserToWaitlistResult" : {"Status" : {"Status" : 1, "StatusMessage" : "" }}  });
+		res.json({"AddUserToWaitlistResult" : {"Status" : {"Status" : 1, "StatusMessage" : "" }}  });
 	})
 	.catch(function(e) {
 		console.error(e);
-		res.json({"GetMessageThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+		console.error(e.stack);
+		res.json({"AddUserToWaitlistResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
 	});
 })
 
