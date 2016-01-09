@@ -3,6 +3,7 @@
 var test = require("./tests.js");
 
 test("Updating user with full info", [
+{
     msg: "Updating user with full info",
     url: "AddEditFacebookUser",
     postdata :
@@ -20,13 +21,21 @@ test("Updating user with full info", [
     ],
     "UserEmployment": [
         {
+            "EmployerName" : "Google",
             "StartYear": "2013",
             "Title": "I'm ",
-            "EmployerName": "We're feed",
-            "Location": "",
+            "Location": "London, UK",
             "JourneyIndex": "2",
             "Summary": "",
-            "EndYear": "2015"
+            "EndYear": "Present"
+        },
+        {
+            "EmployerName" : "Yahoo",
+            "StartYear": "2011",
+            "Title": "I'm ",
+            "JourneyIndex": "1",
+            "Summary": "",
+            "EndYear": "2013"
         }
     ],
     "EmailAddress": "joel@custlabs.com",
@@ -69,7 +78,7 @@ test("Updating user with full info", [
         },
         {
             "JourneyIndex": "0",
-            "Name": "San Francisco. CA",
+            "Name": "San Francisco, CA2",
             "LocationType": "1"
         }
     ],
@@ -84,5 +93,7 @@ test("Updating user with full info", [
             "TagName": "Yoga Guru"
         }
     ]
-}
+},
+    expect: {
+    }
 }]);

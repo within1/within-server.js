@@ -16,7 +16,7 @@ module.exports = function(name, testData) {
 		debug = true;
 	console.log("Using API URL "+url)
 	describe(name, function() {
-	    this.timeout(15000);
+	    this.timeout(60000);
 	    testData.forEach(function(cm) {
 	        it(cm["msg"], function(done) {
 	        	if (debug)

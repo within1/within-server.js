@@ -8,6 +8,7 @@ var compression = require('compression');
 var dateFormat = require('dateformat');
 var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
+var userlib = require("../lib/userlib.js");
 var fs = require("fs");
 var config = require("../config.js");
 var uuid = require('node-uuid');
@@ -35,7 +36,7 @@ router.post('/api/UploadPicture', function(req, res) {
 	var outfn = null, thmfn = null, cuid = null;
 	var cauthuser = null;
 	apilib.requireParameters(req, ["UserToken", "UserID", "Base64PictureEncoding"])
-	.then(function() { return apilib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(authuser) {
 		cauthuser = authuser;
 		var buffer = new Buffer(req.body["Base64PictureEncoding"], "base64");
@@ -64,7 +65,7 @@ router.post('/api/UploadPicture', function(req, res) {
 		return cauthuser.update({ImageURL : cuid+".JPG"});
 	})
 	.then(function() {
-		return apilib.UpdateUserActivityAndNotifications(cauthuser.ID);
+		return userlib.UpdateUserActivityAndNotifications(cauthuser.ID);
 	})
 	.then(function() {
 		res.json({"UploadPictureResult" : {"ImageURL" : cuid+".JPG", "PictureType" : "Profile",  "Status" : { "Status": "1", "StatusMessage": "" }}});
@@ -77,5 +78,3 @@ router.post('/api/UploadPicture', function(req, res) {
 });
 
 module.exports = router;
-
-
