@@ -1,0 +1,23 @@
+<h1>{{user.FirstName}} {{user.LastName}} ( {{user.Title}} )</h1>
+<br /><br />
+<hr size="1" />
+
+<table style="color:#000;max-width: 600px; border: 1px solid #000" >
+	<thead>
+		<th>Name</th>
+		<th>Total score</th>
+		{{#vectornames}}
+			<th>{{.}}</th>
+		{{/vectornames}}
+	</thead>
+	<tbody>
+		{{#matches}}
+		<tr>
+			<td><a href="/admin/user/{{id}}">{{name}}</a></td><td>{{totalscore}}</td>
+			{{#uservectors}}<td>{{.}}</td>{{/uservectors}}
+		</tr>
+		{{/matches}}
+	</tbody>
+</table>
+<br />
+<br /

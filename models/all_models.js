@@ -234,6 +234,93 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "UserContactCards",  timestamps: false }), 
+	"UserEmployments" : sequelize.define("UserEmployments",{
+    "ID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true,
+        "autoIncrement": true
+    },
+    "DateCreated": {
+        "type": "DATETIME",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "DateModified": {
+        "type": "DATETIME",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "UserID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true
+    },
+    "Title": {
+        "type": "NVARCHAR",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "StartMonth": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "StartYear": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "EndYear": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "EndMonth": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Summary": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "EmployerID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true
+    },
+    "LocationID": {
+        "type": "BIGINT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": true
+    },
+    "JourneyIndex": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Name": {
+        "type": "NVARCHAR",
+        "allowNull": false,
+        "defaultValue": "default",
+        "primaryKey": false
+    }
+}, {tableName : "UserEmployments",  timestamps: false }), 
 	"UserEducations" : sequelize.define("UserEducations",{
     "ID": {
         "type": "BIGINT",
@@ -327,93 +414,6 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "UserEducations",  timestamps: false }), 
-	"UserEmployments" : sequelize.define("UserEmployments",{
-    "ID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true,
-        "autoIncrement": true
-    },
-    "DateCreated": {
-        "type": "DATETIME",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "DateModified": {
-        "type": "DATETIME",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "UserID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true
-    },
-    "Title": {
-        "type": "NVARCHAR",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "StartMonth": {
-        "type": "INT",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "StartYear": {
-        "type": "INT",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "EndYear": {
-        "type": "INT",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "EndMonth": {
-        "type": "INT",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "Summary": {
-        "type": "NVARCHAR",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "EmployerID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true
-    },
-    "LocationID": {
-        "type": "BIGINT",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": true
-    },
-    "JourneyIndex": {
-        "type": "INT",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "Name": {
-        "type": "NVARCHAR",
-        "allowNull": false,
-        "defaultValue": "default",
-        "primaryKey": false
-    }
-}, {tableName : "UserEmployments",  timestamps: false }), 
 	"Messages" : sequelize.define("Messages",{
     "ID": {
         "type": "BIGINT",
@@ -499,7 +499,7 @@ module.exports = function(sequelize) {
     },
     "DeviceToken": {
         "type": "NVARCHAR",
-        "allowNull": false,
+        "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
     },
@@ -1166,6 +1166,12 @@ module.exports = function(sequelize) {
         "allowNull": false,
         "defaultValue": "((0))",
         "primaryKey": false
+    },
+    "IsTestUser": {
+        "type": "BIT",
+        "allowNull": false,
+        "defaultValue": "((0))",
+        "primaryKey": false
     }
 }, {tableName : "Users",  timestamps: false }), 
 	"TagAssociations" : sequelize.define("TagAssociations",{
@@ -1258,28 +1264,28 @@ res.Users.hasMany(res.Matches, {foreignKey: "ReachingOutUserID" , as : "MatchesR
 res.Matches.belongsTo(res.Users, {foreignKey: "ReachingOutUserID" , as : "MatchesReachingOutUser" } );
 res.Users.hasMany(res.UserContactCards, {foreignKey: "UserID" } );
 res.UserContactCards.belongsTo(res.Users, {foreignKey: "UserID" } );
-res.Locations.hasMany(res.UserEducations, {foreignKey: "LocationID" } );
-res.UserEducations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
-res.Schools.hasMany(res.UserEducations, {foreignKey: "SchoolID" } );
-res.UserEducations.belongsTo(res.Schools, {foreignKey: "SchoolID" } );
-res.Users.hasMany(res.UserEducations, {foreignKey: "UserID" } );
-res.UserEducations.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Employers.hasMany(res.UserEmployments, {foreignKey: "EmployerID" } );
 res.UserEmployments.belongsTo(res.Employers, {foreignKey: "EmployerID" } );
 res.Locations.hasMany(res.UserEmployments, {foreignKey: "LocationID" } );
 res.UserEmployments.belongsTo(res.Locations, {foreignKey: "LocationID" } );
 res.Users.hasMany(res.UserEmployments, {foreignKey: "UserID" } );
 res.UserEmployments.belongsTo(res.Users, {foreignKey: "UserID" } );
+res.Locations.hasMany(res.UserEducations, {foreignKey: "LocationID" } );
+res.UserEducations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
+res.Schools.hasMany(res.UserEducations, {foreignKey: "SchoolID" } );
+res.UserEducations.belongsTo(res.Schools, {foreignKey: "SchoolID" } );
+res.Users.hasMany(res.UserEducations, {foreignKey: "UserID" } );
+res.UserEducations.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Users.hasMany(res.Messages, {foreignKey: "ReceiverID" , as : "MessagesReceiver" } );
 res.Messages.belongsTo(res.Users, {foreignKey: "ReceiverID" , as : "MessagesReceiver" } );
 res.Users.hasMany(res.Messages, {foreignKey: "SenderID" , as : "MessagesSender" } );
 res.Messages.belongsTo(res.Users, {foreignKey: "SenderID" , as : "MessagesSender" } );
-res.Entities.hasMany(res.Employers, {foreignKey: "EntityID" } );
-res.Employers.belongsTo(res.Entities, {foreignKey: "EntityID" } );
 res.Locations.hasMany(res.UserLocations, {foreignKey: "LocationID" } );
 res.UserLocations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
 res.Users.hasMany(res.UserLocations, {foreignKey: "UserID" } );
 res.UserLocations.belongsTo(res.Users, {foreignKey: "UserID" } );
+res.Entities.hasMany(res.Employers, {foreignKey: "EntityID" } );
+res.Employers.belongsTo(res.Entities, {foreignKey: "EntityID" } );
 res.Entities.hasMany(res.Schools, {foreignKey: "EntityID" } );
 res.Schools.belongsTo(res.Entities, {foreignKey: "EntityID" } );
 res.Entities.hasMany(res.TagInstances, {foreignKey: "OwnerID" } );

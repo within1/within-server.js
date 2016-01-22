@@ -25,8 +25,12 @@ config  = {
 	},
 	elastic: {
 		development: {
-			host : "https://search-within-elastic-ktdabzbnfoyonuwjch3cmrvkya.us-west-1.es.amazonaws.com/",
+			host : "https://search-within-p6gol5sgdakysjzskd7y26rqhe.us-east-1.es.amazonaws.com/",
 			index : "within-dev"
+		},
+		live: {
+			host : "https://search-within-p6gol5sgdakysjzskd7y26rqhe.us-east-1.es.amazonaws.com/",
+			index : "within-live"
 		}
 	},
 	imagedir : "..\\within-images\\"

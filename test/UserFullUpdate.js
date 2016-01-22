@@ -55,6 +55,7 @@ test("Updating user with full info", [
     "Title": "Tester",
     "ImageURL": "603a4420-b55f-11e5-b1b8-51565ea856fa.JPG",
     "FacebookID": "990952180947706",
+    "FacebookAccessToken" : "tester tests 123",
     "UserEducation": [
         {
             "Major": " ",
