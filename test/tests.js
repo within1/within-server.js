@@ -2,7 +2,6 @@
 var assert = require('assert');
 var request = require("request");
 var argv = require('minimist')(process.argv.slice(2));
-console.log(argv);
 
 module.exports = function(name, testData) {
 	var url = "http://127.0.2.2/api/";
@@ -54,7 +53,10 @@ module.exports = function(name, testData) {
 		            if (debug)
 		            	console.log("Comparing with ",compare+cm["url"],"\ndata: ",JSON.stringify(cm["postdata"]));
 		            request({uri: compare+cm["url"], method: "POST", json : cm["postdata"] }, function(error, rescmp, bodycmp) {
+			            if (debug)
+			            	console.log("Compare data ",JSON.stringify(rescmp["body"],0,4));
 		            	assert.deepEqual(res["body"], rescmp["body"]);
+		            	return done(null);
 		            });
 	            });
 	        });

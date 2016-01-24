@@ -20,7 +20,8 @@ router.get('/api', function(req, res) {
 
 
 
-
+// ------------------------------------
+// Contact card handling
 
 // returns a single contact card's details
 router.post('/api/GetContactCardDetails', function(req, res) {
@@ -42,13 +43,111 @@ router.post('/api/GetContactCardDetails', function(req, res) {
 		res.json({"GetContactCardDetailsResult" : {"GetContactCardDetail" : apires, "Status" : { "Status": "1", "StatusMessage": "" }}});
 		// UpdateUserActivityAndNotifications
 	})
-	.catch(function(e) {
-		console.log(e);
-		console.error(e.stack);
-		res.json({"GetContactCardDetailsResult" : {"Status" : {"Status" : "0", "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetContactCardDetailsResult", req, res));
 });
 
+// adds, or edits user's contact card
+router.post('/api/AddEditContactCard', function(req, res) {
+	var isNew = false;
+	apilib.requireParameters(req, ["UserToken", "UserID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
+		return models.UserContactCards.findOne( {where: {UserID : req.body["UserID"] }});
+	})
+	.then(function(card) {
+		console.log("cdd",card);
+		var upd = apilib.update(card, req.body, ["UserID", "Name", "Title", "Company", "PhoneNumber", "Email"]);
+		upd["DateModified"] = dateFormat(new Date(), "isoUtcDateTime");
+		if (card == null) {
+			upd["DateCreated"] = dateFormat(new Date(), "isoUtcDateTime");
+			return models.UserContactCards.create(upd);
+		}
+		return upd.save();
+	})
+	.then(function(c) {
+		c = c.get({plain : true});
+		console.log(c);
+		var apires = apilib.formatAPICall(c, ["DateCreated", "DateModified"]);
+		res.json({"AddEditContactCardResult" : {"GetContactCardDetail" : apires, "Status" : {"Status" : "1", "StatusMessage" : "" }}  });
+	})
+	.catch( apilib.errorhandler("AddEditContactCardResult", req, res));
+})
+
+// ------------------------------------
+// returns: average thankyous, number of thankyous, latest thankyou for current user
+router.post('/api/GetUserAverageThankYous', function(req, res) {
+	apilib.requireParameters(req, ["UserToken", "UserID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function() {
+		return Promise.all([
+			userlib.getAverageThanks(req.body["UserID"]),
+			userlib.getNumberOfThankYous(req.body["UserID"]),
+			userlib.getLatestUserThankYous(req.body["UserID"])
+		]);
+	})
+	.then(function(data) {
+		var apires = apilib.formatAPICall( { AverageThankYous : data[0], NumberOfThankYous : data[1], GetLatestUserThankYous : data[2] } );
+		apires["Status"] = {"Status" : "1", "StatusMessage" : "" };
+		res.json({"GetUserAverageThankYousResult" :  apires  });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("GetUserAverageThankYousResult", req, res));
+});
+
+// updates a coma-separated list of messageIDs' HasRead bitfield for current user
+router.post('/api/UpdateMessageState', function(req, res) {
+	apilib.requireParameters(req, ["UserToken", "UserID", "MessageID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function() {
+		var sids = req.body["MessageID"].split(",");
+		var ids = [];
+		for (var i in sids) {
+			var num = parseInt(sids[i]);
+			if (isNaN(num))
+				throw num+" is not an integer";
+			ids.push(num);
+		}
+		console.log("ids",ids);
+		return models.Messages.update({"HasRead" : 1}, {where : { $and : [ { $or : [{SenderID : req.body["UserID"]} , {ReceiverID : req.body["UserID"]} ] }, { $or : [{ID : ids}] } ]}});
+	})
+	.then(function(cdata) {
+		apires = {"Status" : {"Status" : "1", "StatusMessage" : "" }};
+		res.json({"UpdateMessageStateResult" : apires});
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("UpdateMessageStateResult", req, res));
+});
+
+// lists all thankyous for a user
+router.post("/api/GetUsersAllThankYous", function(req, res) {
+	apilib.requireParameters(req, ["UserToken", "UserID", "OtherUserID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
+		return userlib.getUserRatings(req.body["OtherUserID"], req.body["PageNumber"]);
+	})
+	.then(function(cdata) {
+		apires = {"GetUserAllThankYous" : cdata, "Status" : {"Status" : "1", "StatusMessage" : "" }};
+		res.json({"GetUsersAllThankYousResult" : apires} );
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("GetUsersAllThankYousResult", req, res));
+});
+
+// deletes a thankyou message / rating for a user
+router.post("/api/DeleteThankYou", function(req, res) {
+	apilib.requireParameters(req, ["UserToken", "UserID", "RatingID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
+		return models.UserRatings.update({"isDeletedByRatedUser" : 1}, {where : { $and : [ { RaterID : req.body["UserID"]} , { ID : req.body["RatingID"]} ] } } );
+	})
+	.then(function(d) {
+		res.json({GetDeleteRatingResult : {"Status" : {"Status" : "1", "StatusMessage" : "" }} });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("GetDeleteRatingResult", req, res));
+});
+
+// ------------------------------------
 // add user to waitlist & send email notification for within team
 router.post("/api/AddUserToWaitlist", function(req, res) {
 	var cuser = null;

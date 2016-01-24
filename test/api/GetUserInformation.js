@@ -1,4 +1,4 @@
-// GetMessageThread API tests
+// GetUserInformation API tests
 
 var test = require("./tests.js");
 

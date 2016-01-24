@@ -11,12 +11,6 @@ var userlib = require("../lib/userlib.js");
 var dateFormat = require('dateformat');
 
 
-router.get('/api/CheckForUserFromFacebookID', function(req, res) {
-	res.json({"ok":"ok"});
-});
-
-
-
 router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 	var usermodel = null;
 	apilib.requireParameters(req, ["FacebookID", "DeviceToken"])
