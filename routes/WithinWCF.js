@@ -28,6 +28,8 @@ function routeProxy(funcname, postdata, cb) {
 		if (error != null)
 			console.error(error);
 		console.log("response from "+url);
+		console.log(error);
+		console.log(res);
 		console.log(body);
 		cb(null, body);
 	});
