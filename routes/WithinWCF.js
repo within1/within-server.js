@@ -19,7 +19,8 @@ router.use(compression({ threshold: 512}));
 function routeProxy(funcname, postdata, cb) {
 	var baseurl = (process.env.NODE_ENV == "development") ? ("http://dev.within.guru/") : ("http://app.within.guru/");
 	var url = baseurl+"WCF/Service1.svc/"+funcname;
-	var apifuncs = ["GetAllUsers"];
+	// var apifuncs = ["GetAllUsers"];
+	var apifuncs = [];
 	if (apifuncs.indexOf(funcname) != -1) {
 		url = baseurl+"api/"+funcname;
 	}
