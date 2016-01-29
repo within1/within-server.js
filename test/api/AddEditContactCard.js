@@ -1,6 +1,6 @@
 // AddEditContactCard
 
-var test = require("./tests.js");
+var test = require("../tests.js");
 
 test("Edit contact card details", [
 {

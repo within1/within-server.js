@@ -1,6 +1,6 @@
 // User updating test
 
-var test = require("./tests.js");
+var test = require("../tests.js");
 
 test("Updating user with full info", [
 {
