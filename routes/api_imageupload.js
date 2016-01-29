@@ -13,6 +13,8 @@ var fs = require("fs");
 var config = require("../config.js");
 var uuid = require('node-uuid');
 var gm = require('gm').subClass({imageMagick: true});
+var env       = process.env.NODE_ENV || "development";
+var imagedir = config.imagedir[env];
 
 var autoOrient = Promise.promisify(function(fn,cb) { gm(fn).autoOrient().write(fn, function(err, res) {cb(err, res) }) });
 var thumbnail = Promise.promisify(function(fn, outfn, minwidth,minheight, quality, cb) { gm(fn).thumb(minwidth, minheight, outfn, quality, function(err, res) {cb(err, res) }) });
@@ -20,17 +22,6 @@ var thumbnail = Promise.promisify(function(fn, outfn, minwidth,minheight, qualit
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
-
-/*
-router.get('/api/ImageUpload', function(req, res) {
-	res.json({"description" : "Within.guru server Image Store", "version" : "1.0"});
-});
-*/
-
-router.get("/api/path", function(err, res) {
-	res.json(process.env);
-})
-
 
 router.post('/api/UploadPicture', function(req, res) {
 	var outfn = null, thmfn = null, cuid = null;
@@ -41,7 +32,7 @@ router.post('/api/UploadPicture', function(req, res) {
 		cauthuser = authuser;
 		var buffer = new Buffer(req.body["Base64PictureEncoding"], "base64");
 		cuid = uuid.v1();
-		var rfn = config.imagedir+cuid;
+		var rfn = imagedir+cuid;
 		outfn = rfn+".JPG";
 		thmfn = rfn+"_Thumb.JPG";
 		fs.writeFileSync(outfn, buffer);
@@ -53,9 +44,9 @@ router.post('/api/UploadPicture', function(req, res) {
 	.then(function() {
 		// remove previous images if exists
 		if ((cauthuser.ImageURL != "") && (cauthuser.ImageURL != null)) {
-			if (fs.existsSync(config.imagedir+cauthuser.ImageURL))
-				fs.unlinkSync(config.imagedir+cauthuser.ImageURL)
-			var oldthumb = config.imagedir+cauthuser.ImageURL.replace(".JPG", "_Thumb.JPG");
+			if (fs.existsSync(imagedir+cauthuser.ImageURL))
+				fs.unlinkSync(imagedir+cauthuser.ImageURL)
+			var oldthumb = imagedir+cauthuser.ImageURL.replace(".JPG", "_Thumb.JPG");
 			if (fs.existsSync(oldthumb))
 				fs.unlinkSync(oldthumb);
 		}

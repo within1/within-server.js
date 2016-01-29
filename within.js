@@ -14,7 +14,6 @@ app.use(compression({ threshold: 512 }));
 
 app.use('/static/', express.static(__dirname + '/static/'));
 
-
 app.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 

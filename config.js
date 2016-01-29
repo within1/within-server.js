@@ -2,6 +2,14 @@
 
 config  = {
 	sql : {
+		local : {
+			user : "CaptainBlackout",
+			password : "A$3gwk19+gV?85zz",
+			port: '1433',
+	        host: 'devdb1.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
+	        database: 'WithinDevelopment',
+	        dialect : "mssql"
+	    },
 		development : {
 			user : "CaptainBlackout",
 			password : "A$3gwk19+gV?85zz",
@@ -23,17 +31,12 @@ config  = {
 		user : "within",
 		password : "Mojomojo8"
 	},
-	elastic: {
-		development: {
-			host : "https://search-within-p6gol5sgdakysjzskd7y26rqhe.us-east-1.es.amazonaws.com/",
-			index : "within-dev"
-		},
-		live: {
-			host : "https://search-within-p6gol5sgdakysjzskd7y26rqhe.us-east-1.es.amazonaws.com/",
-			index : "within-live"
-		}
-	},
-	imagedir : "..\\within-images\\"
+	imagedir : {
+		local : "..\\within-images\\",
+		development: "c:\\inetpub\\wwwroot\\WithinWCF\\ImageUpload\\",
+		live: "c:\\ftproot\\Within\\WithinWCF\\ImageUpload\\",
+	}
+
 };
 
 module.exports = config;

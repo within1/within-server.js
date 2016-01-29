@@ -10,11 +10,11 @@ var bodyParser = require('body-parser');
 var compression = require('compression');
 var Promise = require('bluebird');
 var request = require("request");
+var env       = process.env.NODE_ENV || "development";
+var imagedir = config.imagedir[env];
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
-
-module.exports = router;
 
 function routeProxy(funcname, postdata, cb) {
 	var baseurl = (process.env.NODE_ENV == "development") ? ("http://dev.within.guru/") : ("http://app.within.guru/");
@@ -36,9 +36,10 @@ function routeProxy(funcname, postdata, cb) {
 router.get('/WithinWCF/Service1.svc/:apicall', function(req, res) {
 	if (req.params["apicall"] === undefined)
 		return res.send("not found");
-	res.send("api call: "+JSON.stringify(req.params,0,4));
+	return routeProxy(req.params["apicall"], req.body, function(err, data) {
+		return res.send(data);
+	})
 });
-
 
 router.post('/WithinWCF/Service1.svc/:apicall', function(req, res) {
 	if (req.params["apicall"] === undefined)
@@ -47,3 +48,8 @@ router.post('/WithinWCF/Service1.svc/:apicall', function(req, res) {
 		return res.send(data);
 	})
 });
+
+router.use('/WithinWCF/ImageUpload/', express.static(imagedir));
+
+
+module.exports = router;

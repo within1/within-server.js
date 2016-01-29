@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var async = require("async");
 var QueryInterface = models.sequelize.getQueryInterface();
 
-// converts the queried user data into the model used in elastic search
+// converts the queried user data into the model used in SQL queries
 function userDataToModel(udata) {
 	var citem = { };
 
