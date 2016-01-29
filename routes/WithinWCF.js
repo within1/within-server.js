@@ -25,6 +25,8 @@ function routeProxy(funcname, postdata, cb) {
 	}
 	console.log(url);
 	request({uri: url, method: "POST", json : postdata }, function(error, res, body) {
+		if (error != null)
+			console.error(error);
 		cb(null, body);
 	});
 }
