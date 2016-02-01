@@ -9,7 +9,6 @@ var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
 var userlib = require("../lib/userlib.js");
 var dateFormat = require('dateformat');
-var matchlib = require("../lib/matchlib.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
