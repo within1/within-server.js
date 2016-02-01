@@ -179,6 +179,28 @@ router.post("/api/AddUserToWaitlist", function(req, res) {
 	});
 })
 
+// ------------------------------------
+// add user to waitlist & send email notification for within team
+
+
+// returns a Promise<match>
+function createNewMatch(userid) {
+	return models.Matches.create({
+		DateCreated : dateFormat( new Date(), "isoUtcDateTime"),
+		MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
+		OtherUserID : 2,
+		ReachingOutUserID : userid,
+		MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
+		ReachingOutUserHasViewedFlag : 0,
+		ReachingOutUserHasDeletedFlag : 0,
+		OtherUserHasDeletedFlag : 0,
+		MatchRationale : "Automatch",
+		MatchExpireDate : dateFormat( new Date(Date.now() + 6*24*60*60* 1000), "isoUtcDateTime"),
+		IsDead : 0
+	});
+}
+
+
 // returns matches for given user
 router.post("/api/GetMatchesForUser", function(req, res) {
 	var cuser = null;
@@ -187,43 +209,80 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(authuser) {
 		cuser = authuser;
-		// find previous matches:
-		// Get Matches without messages where the calling user is the ReachingOutUser
-		return models.Matches.findAll({where : {"IsDead" : 0, "ReachingOutUserID" : cuser["ID"], "NewestMessageID" : null, "OtherUserHasDeletedFlag" : 0, "ReachingOutUserHasDeletedFlag" : 0 } })
-		.then(function(messageMatches) {
-			for (var i in messageMatches)
-				allmatches.push(messageMatches[i]);
-			return true;
-		});
+		// find all previous non-dead matches:
+		return Promise.all([
+			models.Matches.findAll({where : {"IsDead" : 0, "OtherUserHasDeletedFlag" : 0, "ReachingOutUserHasDeletedFlag" : 0, "ReachingOutUserID" : cuser["ID"] } }),
+			models.Matches.findAll({where : {"IsDead" : 0, "OtherUserHasDeletedFlag" : 0, "ReachingOutUserHasDeletedFlag" : 0, "OtherUserID" : cuser["ID"] } })
+		]);
 	})
-	// check if we need to generate new matches
-	.then(function() {
-		if (allmatches.length > 0)
-			return true;
-		return matchlib.createNewMatch(cuser["ID"])
-		.then(function(newMatch) {
-			allmatches.push(newMatch);
-		});
+	.then(function(matches) {
+		for (var i in matches)
+			for (var j in matches[i])
+				allmatches.push( matches[i][j].get({plain: true}) );
+		// check if we need to generate new matches
+		var isnewestexpired = false;
+		if (allmatches.length > 0) {
+			var newestMatch = allmatches[0];
+			for (var i in allmatches) {
+				if ((allmatches[i]["ReachingOutUserID"] == cuser["ID"]) && (allmatches[i]["MatchDate"] > newestMatch["MatchDate"] ))
+					newestMatch = allmatches[i];
+			}
+			if (newestMatch["MatchExpireDate"] < (new Date()))
+				isnewestexpired = true;
+		}
+
+		if ((allmatches.length == 0) || (isnewestexpired) || ((req.body["GetNewMatch"] !== undefined) && (req.body["GetNewMatch"] == "1") ) )
+			return createNewMatch(cuser["ID"])
+			.then(function(newMatch) {
+				allmatches.push(newMatch);
+				return true;
+			});
+		return true;
 	})
 	// convert all matches into matchresults
 	.then(function() {
 		return Promise.map(allmatches, function(m) {
 			// get public user information
+			var res = null;
 			var cuid = (m["OtherUserID"] == cuser["ID"])?(m["ReachingOutUserID"]):(m["OtherUserID"]);
 			return userlib.getPublicUserInfo(cuid, false)
 			.then(function(otherUserInfo) {
-				var res = userlib.copyValues(m, ["MatchDate", "MatchExpireTime", "MatchRationale"]);
+				res = userlib.copyValues(m, ["MatchDate", "MatchRationale"]);
 				res["MatchID"] = m["ID"];
 				res["UnreadMessageCount"] = 0;
 				res["UserHasViewedMatch"] = m["ReachingOutUserHasViewedFlag"];
+				res["IsPreferredMatch"] = false;
 				res = apilib.formatAPICall(res);
 				res["UserInformation"] = otherUserInfo["PublicUserInformation"];
+				res["MatchExpireTime"] = dateFormat(m["MatchExpireDate"], "mm/dd/yyyy HH:MM:ss", true);
+				// get latest one message
+				return models.Messages.findAll({where : {$or : [{ ReceiverID : m["ReachingOutUserID"], SenderID : m["OtherUserID"]  },
+					{ ReceiverID : m["OtherUserID"], SenderID : m["ReachingOutUserID"] } ] }, orderby : {desc : "ID"}, limit : 1});
+			})
+			.then(function(msg) {
+				if ((msg == null) || (msg.length == 0)) {
+					res["LatestMessage"] = null;
+					return res;
+				}
+				cmsg = userlib.copyValues(msg[0].get({plain : true}),  ["ID", "DateCreated", "SenderID", "ReceiverID", "Type", "HasRead"]);
+				cmsg["Message"] = msg[0]["Message1"];
+				res["LatestMessage"] = apilib.formatAPICall(cmsg, ["DateCreated"]);
 				return res;
 			})
 		})
 	})
 	// send resulting array
 	.then(function(matchresults) {
+		// Matches with no messages come first in response list
+		matchresults.sort(function(a,b) {
+			if (a["LatestMessage"] == null)
+				return -1;
+			if (b["LatestMessage"] == null)
+				return 1;
+			return (a["MatchID"] < b["MatchID"])?(-1):(1);
+		})
+		if (matchresults.length > 0)
+			matchresults[0]["IsPreferredMatch"] = "true";
 		var msgres = {"Matches" : matchresults, "NextMatchDate" : null, "Status" : {"Status" : "1", "StatusMessage" : "" } };
 		return res.json({"GetMatchesForUserResult" : msgres });
 	})

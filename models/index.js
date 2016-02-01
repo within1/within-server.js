@@ -10,5 +10,6 @@ var db        = require(__dirname+"/all_models.js")(sequelize);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+db.env = env;
 console.log("Models reinit");
 module.exports = db;

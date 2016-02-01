@@ -2,6 +2,7 @@
 
 var models  = require('../models');
 var Promise = require('bluebird');
+var request = require("request");
 var async = require("async");
 var QueryInterface = models.sequelize.getQueryInterface();
 
@@ -76,6 +77,27 @@ function userDataToModel(udata) {
 	return citem;
 }
 
+// returns the list of app-registered facebook friends by querying the graph API directly
+function getFacebookFriends(cuser, cb) {
+	var reslist = [];
+	var cpage = 0;
+	var webget = function(url) {
+		request(url, function(err,res,body) {
+			if (err != null)
+				throw "facebook request error: "+err;
+			if (res.statusCode != 200)
+				throw "facebook request code: "+res.statusCode;
+			var cinfo = JSON.parse(body);
+			Array.prototype.push.apply(reslist,cinfo["data"]);
+			if (cinfo["paging"]["next"] === undefined)
+				cb(null,reslist);
+			console.log("-----------------brbr-----------------");
+			setTimeout(function() { webget(cinfo["paging"]["next"]) },0);
+		});
+	};
+	webget("https://graph.facebook.com/v2.5/"+cuser["FacebookID"]+"/friends?limit=500&offset=0&format=json&access_token="+cuser["FacebookAccessToken"]);
+}
+
 
 function getVectors(cuser) {
 	return {
@@ -87,6 +109,19 @@ function getVectors(cuser) {
 				return models.Users.findAll( {where : { IsTestUser : false}, attributes: ['ID'], raw: true }).then(function(res) { return cb(null, res); });
 			else
 				return models.Users.findAll( {where : { IsTestUser : true}, attributes: ['ID'], raw: true }).then(function(res) { return cb(null, res); });
+		},
+		"isFacebookFriend" : function(cb) {
+			if ( (cuser["FacebookAccessToken"] === undefined) || (cuser["FacebookAccessToken"] == null)) {
+				return cb(null, []);
+			}
+			getFacebookFriends(cuser, function(err, ids) {
+				var fbids = [];
+				for (var i in ids)
+					fbids.push(ids[i]["id"]);
+				var sfb = fbids.join(", ");
+
+				return cb(null, []);
+			})
 		},
 		"alreadymatched" : function(cb) {
 			models.sequelize.query("SELECT ReachingOutUserID , OtherUserID FROM Matches where ReachingOutUserID = ? or OtherUserID = ?", { replacements: [cuser["ID"], cuser["ID"] ], type: models.sequelize.QueryTypes.SELECT})
@@ -200,6 +235,7 @@ var vectorWeights = {
 	"testuser" : -10000,
 	"alreadymatched" : -10000,
 	"isTeamWithin" : -10000,
+	"isFacebookFriend" : -10000,
 	"gender" : 1,
 	"hometown" : 1,
 	"ReachSkill2OfferedSkill" : 1,
@@ -225,6 +261,8 @@ function matchUser(uid, maxmatch, cb) {
 		{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }] }
 	]})
 	.then(function(data) {
+		if ((data == null) || (data.length == 0))
+			throw "User id#"+uid+" not found (DB "+models.env+")";
 		var data = data.get({plain : true});
 		var cuser = userDataToModel(data);
 		// console.log(JSON.stringify(cuser,0,4)); process.exit(0);
@@ -278,9 +316,10 @@ function matchUser(uid, maxmatch, cb) {
 module.exports = {matchUser : matchUser, vectorWeights : vectorWeights};
 
 if (!module.parent) {
-	matchUser(39, 0, function(res) {
+	matchUser(4067, 0, function(res) {
 		console.log(res);
 		process.exit(0);
 	})
 }
+
 
