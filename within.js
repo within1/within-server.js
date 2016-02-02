@@ -18,6 +18,7 @@ app.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // apply sessions
+/*
 app.use(cookieParser())
 app.use(session({
   secret: 'keyboard cat',
@@ -28,6 +29,7 @@ app.use(session({
   saveUninitialized : true,
   proxy: true // if you do SSL outside of node.
 }))
+*/
 
 app.use(function(req, res, next) {
   console.log("Requested URL: ",req.url);
@@ -56,4 +58,3 @@ if (process.env.PORT == undefined) {
 	server.listen(process.env.PORT);
 }
 console.log("Server started on port "+process.env.PORT);
-

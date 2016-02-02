@@ -152,6 +152,8 @@ where m.OtherUserID = ?", { replacements: [req.params.userid], type: models.sequ
 		}
 	}, function(err, resdata) {
 		data = resdata["user"];
+		if (data == null)
+			return res.send("User not found");
 		var rl = [];
 		for (var i in data.dataValues) {
 			if ((data.dataValues[i] instanceof Array) || (data.dataValues[i] instanceof Object) || (i == "Token")) {
@@ -339,39 +341,44 @@ router.get("/admin/match/*", function(req,res) {
 	if ((req.params.length == 0) || (req.params[0] == "")) {
 		return res.send("No userid given");
 	}
-	match.matchUser(req.params[0],8,  function(cd) {
+	var cd = null;
+	match.match(req.params[0],8)
+	.then(function(reslist) {
+		cd = reslist;
 		var idlist = [req.params[0]];
 		for (var i in cd)
 			idlist.push(cd[i]["id"]);
-		models.Users.findAll({where : {id: idlist } })
-		.then(function(ulist) {
-			var culist = {};
-			for (var i in ulist)
-				culist[ulist[i]["ID"]] = ulist[i];
-			var cvecs = Object.keys(match.vectorWeights);
-			var data = { "vectornames" : cvecs, "user" : culist[req.params[0]]};
-			for (var i in cd) {
-				cd[i]["name"] = culist[cd[i]["id"]]["FirstName"]+" "+culist[cd[i]["id"]]["LastName"];
-				cd[i]["uservectors"] = [];
-				for (var k in cvecs) {
-					console.log(cd[i]["vectors"][cvecs[k]]);
-					if (cd[i]["vectors"][cvecs[k]] === undefined) {
-						cd[i]["uservectors"].push("-");
-					} else if (cd[i]["vectors"][cvecs[k]] instanceof Array) {
-						cd[i]["uservectors"].push(cd[i]["vectors"][cvecs[k]].length );
-					} else {
-						cd[i]["uservectors"].push("YES");
-					}
+		return models.Users.findAll({where : {id: idlist } })
+	})
+	.then(function(ulist) {
+		var culist = {};
+		for (var i in ulist)
+			culist[ulist[i]["ID"]] = ulist[i];
+		var cvecs = Object.keys(match.vectorWeights);
+		var data = { "vectornames" : cvecs, "user" : culist[req.params[0]]};
+		for (var i in cd) {
+			cd[i]["name"] = culist[cd[i]["id"]]["FirstName"]+" "+culist[cd[i]["id"]]["LastName"];
+			cd[i]["uservectors"] = [];
+			for (var k in cvecs) {
+				// console.log(cd[i]["vectors"][cvecs[k]]);
+				if (cd[i]["vectors"][cvecs[k]] === undefined) {
+					cd[i]["uservectors"].push("-");
+				} else if (cd[i]["vectors"][cvecs[k]] instanceof Array) {
+					cd[i]["uservectors"].push(cd[i]["vectors"][cvecs[k]].length );
+				} else {
+					cd[i]["uservectors"].push("YES");
 				}
 			}
-			data["matches"] = cd;
-			var output = Mustache.render(fs.readFileSync("./routes/admin_match.html", "utf8"), data );
-			var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
-			res.send(framed);
-			// res.send(JSON.stringify(cd,0,4));
-
-		})
-	});
+		}
+		data["matches"] = cd;
+		var output = Mustache.render(fs.readFileSync("./routes/admin_match.html", "utf8"), data );
+		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+		return res.send(framed);
+		// res.send(JSON.stringify(cd,0,4));
+	})
+	.catch(function(err) {
+		res.send(JSON.stringify(err));
+	})
 });
 
 module.exports = router;

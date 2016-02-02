@@ -18,7 +18,7 @@
     "express": "^4.13.3",
     "express-session": "^1.12.1",
     "mustache": "^2.2.0",
-    "sequelize": "^3.13.0",
+    "sequelize": "^3.19.0",
     "tedious": "^1.13.1"
   },
   "devDependencies": {
@@ -28,6 +28,7 @@
     "mandrill-api": "^1.0.45",
     "mocha": "^2.3.4",
     "node-uuid": "^1.4.7",
-    "request": "^2.69.0"
+    "request": "^2.69.0",
+    "sequelize": "^3.19.0"
   }
 }

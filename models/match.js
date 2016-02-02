@@ -84,9 +84,9 @@ function getFacebookFriends(cuser, cb) {
 	var webget = function(url) {
 		request(url, function(err,res,body) {
 			if (err != null)
-				throw "facebook request error: "+err;
+				throw "facebook request error: "+err+" pulling "+url;
 			if (res.statusCode != 200)
-				throw "facebook request code: "+res.statusCode;
+				throw "facebook request code: "+res.statusCode+" pulling "+url;
 			var cinfo = JSON.parse(body);
 			Array.prototype.push.apply(reslist,cinfo["data"]);
 			if (cinfo["paging"]["next"] === undefined)
@@ -103,6 +103,9 @@ function getVectors(cuser) {
 	return {
 		"sameuser" : function(cb) {
 			return cb(null, [{"id" : cuser["ID"]}] );
+		},
+		"notapproveduser" : function(cb) {
+			return models.Users.findAll( {where : { AppStatus : { $ne : 2}}, attributes: ['ID'], raw: true }).then(function(res) { return cb(null, res); });
 		},
 		"testuser" : function(cb) {
 			if (cuser["IsTestUser"] == 1)
@@ -144,6 +147,8 @@ function getVectors(cuser) {
 			return models.Users.findAll( {where : {Gender : cuser["Gender"]}, attributes: ['ID'], raw: true }).then(function(res) { return cb(null, res); });
 		},
 		"hometown" : function(cb) {
+			if (cuser["hometown"] === undefined)
+				return cb(null, []);
 			return models.sequelize.query("SELECT distinct(u.id) FROM Users u left join UserLocations ul on ul.UserID = u.ID where LocationType = 1 and LocationID = ?", { replacements: [cuser["hometown"] ], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
 		"ReachSkill2OfferedSkill" : function(cb) {
@@ -182,11 +187,15 @@ function getVectors(cuser) {
 			return models.sequelize.query("select UserID as id from (SELECT UserID, max(EndYear) as gradyear FROM [dbo].[UserEducations] group by UserID ) as t where gradyear = ?",{  type:  models.sequelize.QueryTypes.SELECT, replacements: [cuser["gradyear"] ]  }).then(function(res) { cb(null, res); });
 		},
 		"SharedEducation" : function(cb) {
+			if (cuser["schools"].length == 0)
+				return cb(null, []);
 			var edutags = cuser["schools"].join(", ");
 			return models.sequelize.query("select UserID as id, SchoolID from UserEducations ue where SchoolID in ("+edutags+")",{ replacements: [cuser["ID"] ], type:  models.sequelize.QueryTypes.SELECT }).then(function(res) { cb(null, res); });
 		},
 		"SharedMajor" : function(cb) {
 			var majors = [];
+			if (cuser["majors"].length == 0)
+				return cb(null, []);
 			for (var i in cuser["majors"])
 				majors.push( QueryInterface.escape(cuser["majors"][i]) );
 			majors = majors.join(", ");
@@ -194,6 +203,8 @@ function getVectors(cuser) {
 		},
 		"SharedDegree" : function(cb){
 			var degrees = [];
+			if (cuser["degrees"].length == 0)
+				return cb(null, []);
 			for (var i in cuser["degrees"])
 				degrees.push( QueryInterface.escape(cuser["degrees"][i]) );
 			degrees = degrees.join(", ");
@@ -236,6 +247,7 @@ var vectorWeights = {
 	"alreadymatched" : -10000,
 	"isTeamWithin" : -10000,
 	"isFacebookFriend" : -10000,
+	"notapproveduser" : -10000,
 	"gender" : 1,
 	"hometown" : 1,
 	"ReachSkill2OfferedSkill" : 1,
@@ -254,7 +266,7 @@ var vectorWeights = {
 }
 
 function matchUser(uid, maxmatch, cb) {
-	models.Users.findOne( {where : { ID : uid}, include: [
+	return models.Users.findOne( {where : { ID : uid}, include: [
 		{ model : models.UserEducations, separate: true, include: [models.Schools]},
 		{ model : models.UserEmployments, separate: true, include: [models.Employers]},
 		{ model : models.UserLocations, separate: true, include: [models.Locations]},
@@ -306,17 +318,23 @@ function matchUser(uid, maxmatch, cb) {
 		});
 		// console.log(JSON.stringify(ures,0,4));
 		if (maxmatch == 0)
-			cb(ures);
+			cb(null, ures);
 		else
-			cb(ures.splice(0,maxmatch));
-	});
+			cb(null, ures.splice(0,maxmatch));
+	})
+	.catch(function(err) {
+		console.error(e);
+		console.error(e.stack);
+		cb(err, null);
+	})
 }
 
+var match = Promise.promisify(matchUser);
 
-module.exports = {matchUser : matchUser, vectorWeights : vectorWeights};
+module.exports = {matchUser : matchUser, vectorWeights : vectorWeights, match : match };
 
 if (!module.parent) {
-	matchUser(4067, 0, function(res) {
+	matchUser(37, 0, function(err, res) {
 		console.log(res);
 		process.exit(0);
 	})

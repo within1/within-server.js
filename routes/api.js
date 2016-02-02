@@ -9,6 +9,7 @@ var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
 var userlib = require("../lib/userlib.js");
 var dateFormat = require('dateformat');
+var match = require("../models/match.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -179,23 +180,25 @@ router.post("/api/AddUserToWaitlist", function(req, res) {
 })
 
 // ------------------------------------
-// add user to waitlist & send email notification for within team
-
-
 // returns a Promise<match>
 function createNewMatch(userid) {
-	return models.Matches.create({
-		DateCreated : dateFormat( new Date(), "isoUtcDateTime"),
-		MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
-		OtherUserID : 2,
-		ReachingOutUserID : userid,
-		MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
-		ReachingOutUserHasViewedFlag : 0,
-		ReachingOutUserHasDeletedFlag : 0,
-		OtherUserHasDeletedFlag : 0,
-		MatchRationale : "Automatch",
-		MatchExpireDate : dateFormat( new Date(Date.now() + 6*24*60*60* 1000), "isoUtcDateTime"),
-		IsDead : 0
+	return Promise.promisify(match.matchUser)(userid,8)
+	.then(function(matches) {
+		if (matches.length == 0)
+			return null;
+		return models.Matches.create({
+			DateCreated : dateFormat( new Date(), "isoUtcDateTime"),
+			MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
+			OtherUserID : matches[0]["ID"],
+			ReachingOutUserID : userid,
+			MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
+			ReachingOutUserHasViewedFlag : 0,
+			ReachingOutUserHasDeletedFlag : 0,
+			OtherUserHasDeletedFlag : 0,
+			MatchRationale : "Automatch",
+			MatchExpireDate : dateFormat( new Date(Date.now() + 6*24*60*60* 1000), "isoUtcDateTime"),
+			IsDead : 0
+		});
 	});
 }
 
@@ -233,7 +236,8 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 		if ((allmatches.length == 0) || (isnewestexpired) || ((req.body["GetNewMatch"] !== undefined) && (req.body["GetNewMatch"] == "1") ) )
 			return createNewMatch(cuser["ID"])
 			.then(function(newMatch) {
-				allmatches.push(newMatch);
+				if (newMatch != null)
+					allmatches.push(newMatch);
 				return true;
 			});
 		return true;
