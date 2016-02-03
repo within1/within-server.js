@@ -8,7 +8,7 @@ var config    = require(__dirname + '/../config.js');
 var fs = require("fs");
 var Mustache = require("Mustache");
 var async = require("async");
-var match = require("../models/match.js");
+var match = require("../lib/match.js");
 
 // add basic authentication for modules listed from here:
 router.use("/admin/", function(req, res, next) {

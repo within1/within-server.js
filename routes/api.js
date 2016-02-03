@@ -9,7 +9,9 @@ var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
 var userlib = require("../lib/userlib.js");
 var dateFormat = require('dateformat');
-var match = require("../models/match.js");
+var match = require("../lib/match.js");
+var notif = require("../lib/notifications.js");
+var copytext = require("../lib/copytext.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -181,24 +183,42 @@ router.post("/api/AddUserToWaitlist", function(req, res) {
 
 // ------------------------------------
 // returns a Promise<match>
-function createNewMatch(userid) {
-	return Promise.promisify(match.matchUser)(userid,8)
+function createNewMatch(cuser) {
+	console.log("Creating new match for user");
+	return Promise.promisify(match.matchUser)(cuser["ID"],1)
 	.then(function(matches) {
+		var newmatch = null;
+		var onehour = 1000*60*60;
+		var oneday = (onehour*24);
+		var cdate = Math.floor(new Date() / (oneday)) * oneday + notif.HrsPastMidnightToSendMatchNotification * onehour;
+		var exptime = cdate + notif.HrsMatchExpiration * onehour;
 		if (matches.length == 0)
 			return null;
+		console.log("New match ",matches);
 		return models.Matches.create({
 			DateCreated : dateFormat( new Date(), "isoUtcDateTime"),
 			MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
-			OtherUserID : matches[0]["ID"],
-			ReachingOutUserID : userid,
+			OtherUserID : matches[0]["id"],
+			ReachingOutUserID : cuser["ID"],
 			MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
 			ReachingOutUserHasViewedFlag : 0,
 			ReachingOutUserHasDeletedFlag : 0,
 			OtherUserHasDeletedFlag : 0,
 			MatchRationale : "Automatch",
-			MatchExpireDate : dateFormat( new Date(Date.now() + 6*24*60*60* 1000), "isoUtcDateTime"),
+			MatchExpireDate : dateFormat(exptime, "isoUtcDateTime"),
 			IsDead : 0
-		});
+		})
+		.then(function(cm) {
+			newmatch = cm;
+			if (cuser["DeviceToken"] == null)
+				return newmatch;
+			return copytext("./copytext.csv")
+			.then(function(textvalues) {
+				return notif.SendPushNotification(cuser, cdate, notif.HrsMatchExpiration, textvalues.get("PushNewMatchAvailableCopy"), "", notif.pushTypes["NewMatchAvailable"]);
+			})
+			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
+			.then(function(newmsg) { return newmatch; } );
+		})
 	});
 }
 
@@ -233,13 +253,16 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 				isnewestexpired = true;
 		}
 
-		if ((allmatches.length == 0) || (isnewestexpired) || ((req.body["GetNewMatch"] !== undefined) && (req.body["GetNewMatch"] == "1") ) )
-			return createNewMatch(cuser["ID"])
+		if ((allmatches.length == 0) || (isnewestexpired) || ((req.body["GetNewMatch"] !== undefined) && (req.body["GetNewMatch"] == "1") ) ) {
+			return createNewMatch(cuser)
 			.then(function(newMatch) {
-				if (newMatch != null)
-					allmatches.push(newMatch);
+				if (newMatch == null)
+					return true;
+				// add as first element
+				allmatches.unshift(newMatch);
 				return true;
 			});
+		}
 		return true;
 	})
 	// convert all matches into matchresults
@@ -255,7 +278,7 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 				res["UnreadMessageCount"] = 0;
 				res["UserHasViewedMatch"] = m["ReachingOutUserHasViewedFlag"];
 				res["IsPreferredMatch"] = false;
-				res = apilib.formatAPICall(res);
+				res = apilib.formatAPICall(res, ["MatchDate"]);
 				res["UserInformation"] = otherUserInfo["PublicUserInformation"];
 				res["MatchExpireTime"] = dateFormat(m["MatchExpireDate"], "mm/dd/yyyy HH:MM:ss", true);
 				// get latest one message
@@ -274,17 +297,48 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 			})
 		})
 	})
-	// send resulting array
+	// sort resulting array
 	.then(function(matchresults) {
-		// Matches with no messages come first in response list
+		// Match with no messages come first in response list
 		matchresults.sort(function(a,b) {
 			if (a["LatestMessage"] == null)
 				return -1;
 			if (b["LatestMessage"] == null)
 				return 1;
-			return (a["MatchID"] < b["MatchID"])?(-1):(1);
+			return (a["MatchID"] > b["MatchID"])?(-1):(1);
 		})
-		if (matchresults.length > 0)
+		return matchresults;
+	})
+	.then(function(matchresults) {
+		// remove all expired & no-message matches
+		if (matchresults.length < 2)
+			return matchresults;
+		var removeids = [];
+		for (var i = 1; i < matchresults.length; i++) {
+			if (matchresults[i]["LatestMessage"] == null) {
+				removeids.push(matchresults[i]["MatchID"]);
+			}
+		}
+		console.log("removeids ",removeids);
+		return Promise.map(removeids, function(citem) {
+			console.log("removing ",citem);
+			return models.Matches.update({"IsDead" : true}, {where : { ID : citem}});
+		})
+		.then(function() {
+			for (var i in removeids) {
+				for (var j in matchresults) {
+					if (matchresults[j]["MatchID"] == removeids[i]) {
+						matchresults.splice( j, 1);
+						break;
+					}
+				}
+			}
+			return matchresults;
+		})
+	})
+	.then(function(matchresults) {
+		//if a message exists in a conversation, no longer can be preferred
+		if ((matchresults.length > 0) && (matchresults[0]["LatestMessage"] == null))
 			matchresults[0]["IsPreferredMatch"] = "true";
 		var msgres = {"Matches" : matchresults, "NextMatchDate" : null, "Status" : {"Status" : "1", "StatusMessage" : "" } };
 		return res.json({"GetMatchesForUserResult" : msgres });

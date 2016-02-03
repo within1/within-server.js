@@ -8,5 +8,11 @@ That’s it from us. Now go meet some awesome people and learn something new!
 "
 WithinFromEmail,hello@within.guru
 WithinFromName,The WITHIN Team
-PushNewMatchAvailableCopy ,"A new week, a new recommendation just for you. See who it is!"
 EmailComeBackSubject,We miss you!
+PushMessageReceivedCopy1,New Message from 
+PushMessageReceivedCopy2,! Ch-ch-check it out.
+PushThanxReceivedCopy, just gave you Thanx! See what they said.
+PushNewMatchAvailableCopy ,"A new week, a new recommendation just for you. See who it is!"
+PushMatchExpiringCopy,Your recommendation's 'bout to expire. Message them before they're gone!
+PushYoureApprovedCopy1,Congrats 
+PushYoureApprovedCopy2, - You’re IN! Come check out your first recommendation.
