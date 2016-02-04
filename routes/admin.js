@@ -15,17 +15,10 @@ router.use("/admin/", function(req, res, next) {
 	var user = basicAuth(req);
     if (!user || user.name !== config.admin.user || user.pass !== config.admin.password) {
       res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-      return res.send(401);
+      return res.sendStatus(401);
     }
     next();
 });
-
-/*
-router.get("/settings", function(req, res) {
-	var process = require("process");
-	res.send(JSON.stringify(process.env));
-})
-*/
 
 router.get("/admin", function(req, res) {
 	return res.redirect(301, "/admin/users/");

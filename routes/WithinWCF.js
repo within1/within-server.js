@@ -18,12 +18,16 @@ router.use(compression({ threshold: 512}));
 
 function routeProxy(funcname, postdata, cb) {
 	var baseurl = (process.env.NODE_ENV == "development") ? ("http://dev.within.guru/") : ("http://app.within.guru/");
+	if (process.env.NODE_ENV == "local")
+		baseurl = "http://within.local/";
 	var url = baseurl+"WCF/Service1.svc/"+funcname;
-	// var apifuncs = ["GetAllUsers"];
-	var apifuncs = [];
+	url = baseurl+"api/"+funcname;
+	/*
+	var apifuncs = ["GetAllUsers"];
 	if (apifuncs.indexOf(funcname) != -1) {
 		url = baseurl+"api/"+funcname;
 	}
+	*/
 	console.log(url);
 	request({uri: url, method: "POST", json : postdata }, function(error, res, body) {
 		if (error != null)

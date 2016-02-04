@@ -35,8 +35,25 @@ config  = {
 		local : "..\\within-images\\",
 		development: "c:\\inetpub\\wwwroot\\WithinWCF\\ImageUpload\\",
 		live: "c:\\ftproot\\Within\\WithinWCF\\ImageUpload\\",
+	},
+	mandrill : "-9yaWsYS5OWZ5V-j9LCz8w",
+	emails : {
+		local : {
+			FlagEmail	: "joel@custlabs.com",
+			WaitlistEmail : "joel@custlabs.com",
+			TeamWithinMessageEmail : "joel@custlabs.com",
+		},
+		development : {
+			FlagEmail	: "joel@custlabs.com",
+			WaitlistEmail : "joel@custlabs.com",
+			TeamWithinMessageEmail : "joel@custlabs.com",
+		},
+		live : {
+			FlagEmail	: "hello+flag@within.guru",
+			WaitlistEmail : "hello+waitlist@within.guru",
+			TeamWithinMessageEmail : "hello+usermessage@within.guru",
+		}
 	}
-
 };
 
 module.exports = config;

@@ -33,10 +33,10 @@ router.post('/api/GetAllUsers', function(req, res) {
 
 // Changes the application status of a given user. Must have Admin authorization to call
 router.post('/api/ProcessApplication', function(req, res) {
-	apilib.requireParameters(req, ["AdminToken", "AdminID"])
+	apilib.requireParameters(req, ["AdminToken", "AdminID", "ApplicationUserID", "NewAppStatus"])
 	.then(function() { return userlib.validateAdminToken(req.body["AdminID"], req.body["AdminToken"]); })
 	.then(function() {
-
+		///////////////
 	})
 	.catch( apilib.errorhandler("GetProcessApplicationResult", req, res));
 });

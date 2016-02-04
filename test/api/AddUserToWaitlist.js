@@ -1,6 +1,6 @@
 // AddUserToWaitlist API tests
-
-var test = require("./tests.js");
+var test = require("../tests.js");
+var persona = require("../persona.js")();
 
 
 test("AddUserToWaitlist", [
@@ -9,8 +9,8 @@ test("AddUserToWaitlist", [
     url: "AddUserToWaitlist",
     postdata :
 		{
-		    "UserID": "44",
-		    "UserToken": "Dbr/k5trWmO3XRTk3AWfX90E9jwpoh59w/EaiU9df/OkFa6bxluaKsQmBtKDNDHbBpplmFe2Zo06m6TOpxxDc3iaHQaFLsi1zXjBFsfQRVTewDXwdZZ5mxNdEp4HEdrIQY6VRqDvBzltACUdl2CB+gr1grGpDN+UmOnCUh9wD+BcROYXx5SmyTNtFYi+oKU7gjPLI9dWeoJWLVLUmAr6I27OvOdslDh7ctrNSHsbFYAtMI8XLPNx3IfF+ukq1RskAHfwYwBZ1Wuz8ofII/JqUranUrT9omVQ"
+		    "UserID": persona["UserID"],
+		    "UserToken": persona["UserToken"],
 		},
     expect: {
     	"AddUserToWaitlistResult"  : {
@@ -21,4 +21,3 @@ test("AddUserToWaitlist", [
 	    }
     }
 }]);
-

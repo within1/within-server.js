@@ -3,15 +3,15 @@
 var test = require("../tests.js");
 var persona = require("../persona.js")();
 
-test("Malformed education entries", [
+var randnum = Math.floor(Math.random() * 1000000);
+
+test("Malformed education entries with new user creation", [
 {
-    msg: "Updating image of the user only",
+    msg: "Malformed education entries with new user creation",
     url: "AddEditFacebookUser",
     postdata :
 {
-    "UserToken": persona["UserToken"],
-    "UserID": persona["UserID"],
-    "ImageURL": "6e581ac0-b643-11e5-b8f2-ed2fad383b4e.JPG",
+    "FacebookID" : "123123123"+randnum,
 
     "UserEducation": [
         {
@@ -25,6 +25,12 @@ test("Malformed education entries", [
         {"JourneyIndex":"-1","Description":"","Degree":"High School","Major":" "},
         {"JourneyIndex":"-1","Description":"","Name":"Stanford University","Degree":"College","EndYear":"2018","Major":"Computer Science"}
     ],
+        "UserLocation": [
+            {
+                "LocationType": "0",
+                "JourneyIndex": "-1"
+            }
+        ],
 
 },
     expect: {
