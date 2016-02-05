@@ -7,5 +7,8 @@ var thumbnail = Promise.promisify(function(fn, outfn, minwidth,minheight, qualit
 
 return autoOrient("./imagemagicktest.jpg")
 .then(function(cres) {
-	console.log(cres);
+	return thumbnail("./imagemagicktest.jpg", "./imagemagicktest_thm.jpg", 10, 10, 1 )
 })
+.then(function(cres) {
+	console.log(cres);
+});
