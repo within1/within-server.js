@@ -12,7 +12,7 @@ var userlib = require("../lib/userlib.js");
 var fs = require("fs");
 var config = require("../config.js");
 var uuid = require('node-uuid');
-var gm = require('gm').subClass({imageMagick: true});
+var gm = require('gm').subClass({imageMagick: true, appPath : "c:/Program Files/ImageMagick-6.9.3-Q8/"});
 var env       = process.env.NODE_ENV || "development";
 var imagedir = config.imagedir[env];
 
