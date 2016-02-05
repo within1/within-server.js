@@ -23,6 +23,10 @@ var thumbnail = Promise.promisify(function(fn, outfn, minwidth,minheight, qualit
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
 
+router.get("/api/pathtester", function(req, res) {
+	res.send(process.env);
+})
+
 router.post('/api/UploadPicture', function(req, res) {
 	var outfn = null, thmfn = null, cuid = null;
 	var cauthuser = null;
