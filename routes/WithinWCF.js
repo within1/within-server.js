@@ -21,18 +21,18 @@ function routeProxy(funcname, postdata, cb) {
 	if (process.env.NODE_ENV == "local")
 		baseurl = "http://within.local/";
 	var url = baseurl+"WCF/Service1.svc/"+funcname;
-	url = baseurl+"api/"+funcname;
-	/*
-	var apifuncs = ["GetAllUsers"];
+	url = baseurl+"WCF/"+funcname;
+
+	var apifuncs = ["GetAllUsers", "GetMatchesForUser", "UploadPicture"];
 	if (apifuncs.indexOf(funcname) != -1) {
 		url = baseurl+"api/"+funcname;
 	}
-	*/
+
 	console.log(url);
 	request({uri: url, method: "POST", json : postdata }, function(error, res, body) {
 		if (error != null)
 			console.error(error);
-		console.log("response from "+url);
+		console.log("response from "+url+" ("+res.statusCode+")");
 		console.log(body);
 		cb(null, body);
 	});

@@ -206,6 +206,8 @@ router.post("/api/SubmitUserRating", function(req, res) {
 	.then(function(newFeedback) {
 		res.json({"SubmitUserRatingResult" : {"Status" : {"Status" : "1", "StatusMessage" : "" }}  });
 	})
+	//Set Match "ReachingOutUserHasViewedFlag" to true
+
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
 	.catch( apilib.errorhandler("SubmitUserRatingResult", req, res));
 });

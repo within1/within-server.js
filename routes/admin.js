@@ -9,6 +9,9 @@ var fs = require("fs");
 var Mustache = require("Mustache");
 var async = require("async");
 var match = require("../lib/match.js");
+var adminlib = require("../lib/adminlib.js");
+var dateFormat = require('dateformat');
+var rp = require("request-promise");
 
 // add basic authentication for modules listed from here:
 router.use("/admin/", function(req, res, next) {
@@ -177,6 +180,10 @@ where m.OtherUserID = ?", { replacements: [req.params.userid], type: models.sequ
 				resdata["matchedwith"][i]["MatchRationale"] = resdata["matchedwith"][i]["MatchRationale"].split("\n").join("<br />\n");
 
 		}
+		if (resdata["user"]["AppStatus"] != 2)
+			resdata["approvable"] = true;
+		if (resdata["reachingout"].length > 0)
+			resdata["hasreachout"] = 1;
 		//  return res.json(resdata["matchedwith"]);
 		var output = Mustache.render(fs.readFileSync("./routes/admin_usersingle.html", "utf8"), resdata);
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
@@ -371,6 +378,47 @@ router.get("/admin/match/*", function(req,res) {
 	})
 	.catch(function(err) {
 		res.send(JSON.stringify(err));
+	})
+});
+
+router.post("/admin/user/:userid/approve", function(req, res) {
+	return models.Users.findOne({where : { ID : req.params["userid"]}})
+	.then(function(u) {
+		if (u == null)
+			throw "User not found";
+		return adminlib.ProcessUserApplication(req.params["userid"], 2);
+	})
+	.then(function(r) {
+		return res.redirect(301, "/admin/user/"+req.params["userid"]);
+	})
+	.catch(function(e) {
+		console.error(e);
+		return res.send(e);
+	})
+});
+
+router.post("/admin/user/:userid/expirelatest", function(req, res) {
+	var cuser = null;
+	return models.Users.findOne({where : { ID : req.params["userid"]}})
+	.then(function(u) {
+		cuser = u;
+		return models.Matches.findAll( { where : { ReachingOutUserID : req.params["userid"] }, order : "ID desc", limit : 1})
+	})
+	.then(function(m) {
+		if (m.length == 0)
+			throw "No match found with reachingout user "+req.params["userid"];
+		return models.Matches.update( { MatchExpireDate : dateFormat( new Date(), "isoUtcDateTime") }, { where : { ID : m[0]["ID"] } })
+	})
+	.then(function(r) {
+		return rp({uri : "http://"+req.headers.host+"/api/GetMatchesForUser", method: "POST", json : { "UserID" : cuser["ID"], "UserToken" : cuser["Token"] }})
+	})
+	.then(function(js) {
+		// return res.send(js);
+		return res.redirect(301, "/admin/user/"+req.params["userid"]);
+	})
+	.catch(function(e) {
+		console.error(e);
+		return res.send(e);
 	})
 });
 

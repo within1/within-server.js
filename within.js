@@ -50,6 +50,12 @@ fs
   	app.use(croute);
   });
 
+// default post handler
+app.use(function(req, res, next) {
+  console.error("No API defined for: "+req.url);
+  res.status(404).send("No API defined for: "+req.url);
+});
+
 var server = http.createServer(app);
 if (process.env.PORT == undefined) {
 	process.env.PORT = 5000;
@@ -58,3 +64,4 @@ if (process.env.PORT == undefined) {
 	server.listen(process.env.PORT);
 }
 console.log("Server started on port "+process.env.PORT);
+

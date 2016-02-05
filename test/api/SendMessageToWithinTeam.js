@@ -10,8 +10,8 @@ test("SendMessage", [
     postdata :
 {
     "Type": "1",
-    "Message": "Hello world!",
-    "ReceiverID": 43,
+    "Message": "Hello within team!",
+    "ReceiverID": 28,
 	"UserID" : persona["UserID"],
 	"UserToken" : persona["UserToken"],
 },

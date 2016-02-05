@@ -9,6 +9,9 @@ var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
 var userlib = require("../lib/userlib.js");
 var dateFormat = require('dateformat');
+var notif = require("../lib/notifications.js");
+var match = require("../lib/match.js");
+var copytext = require("../lib/copytext.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -83,9 +86,12 @@ router.post("/api/GetMessageThread", function(req, res) {
 router.post("/api/SendMessage", function(req, res) {
 	var msgres = {};
 	var allmsgs = null;
+	var matchid = null;
+	var cuser = null;
 	apilib.requireParameters(req, ["UserID", "UserToken", "ReceiverID", "Message", "Type"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(userdata) {
+		cuser = userdata;
 		// create new message
 		return models.Messages.create({
 			DateCreated : dateFormat(new Date(), "isoUtcDateTime"),
@@ -98,6 +104,47 @@ router.post("/api/SendMessage", function(req, res) {
 	})
 	.then(function(newmsg) {
 		msgres["MessageID"] = newmsg["ID"];
+		//Get the match within which the message was sent, and update the NewestMessageID field
+		return match.getExistingMatch(req.body["UserID"], req.body["ReceiverID"] );
+	})
+	.then(function(msgmatch) {
+		if (msgmatch == null)
+			throw "SendMessage is being called in a context where there is no Match between the Users";
+		matchid = msgmatch["ID"];
+		return models.Matches.update({"NewestMessageID" : msgres["MessageID"]} ,{where : {ID : matchid }} );
+	})
+	.then(function() {
+		return models.Users.findOne({where : {ID : req.body["ReceiverID"]}})
+	})
+	.then(function(ruser) {
+		if (ruser == null)
+			throw "Receiving user can't be found for message";
+		// send message to receiver
+		if (ruser["IsTeamWithin"])
+			// user PMd the within team
+			return notif.SendAdminMail("TeamWithinMessageEmail", cuser["FirstName"]+" "+cuser["LastName"]+" messaged the WITHIN Team",
+				"This is what " +cuser["FirstName"]+" has to say: \n"+req.body["Message"]+"\nSent: "+(new Date()),
+				{"headers" : {"Reply-To" : cuser["EmailAddress"] }, "from_email" : cuser["EmailAddress"], "from_name" : cuser["FirstName"]+" "+cuser["LastName"] });
+		// send a notification for all except thanx messages
+		if ((cuser["DeviceToken"] != null) && ((req.body["Message"].length > 0) && (req.body["Type"] != 4)) || (req.body["Type"] == 2)) {
+			msg = req.body["Message"];
+			if (req.body["Type"] == 2)
+				msg = cuser["FirstName"]+" sent you contact details";
+			//immediate email notification
+			return notif.SendEmailNotification(ruser["ID"], new Date(), 0, notif.emailTypes["MessageReceived"], cuser["FirstName"], cuser["ImageURL"], msg, cuser["ID"] )
+			.then(function() { return copytext("./copytext.csv"); } )
+			.then(function(textvalues) {
+				console.log(textvalues);
+				//immediate push notification
+				return notif.SendPushNotification(ruser, new Date(),0,
+					textvalues.get("PushMessageReceivedCopy1")+" "+cuser["FirstName"]+" "+textvalues.get("PushMessageReceivedCopy2"),
+					msgres["MessageID"], notif.pushTypes["MessageReceived"]  );
+			})
+			.then(function() {
+				// cancel reminder notification
+				notif.UpdateExpiringMatchNotification(matchid, cuser["ID"], 0);
+			})
+		}
 	})
 	.then(function() {
 		msgres["Status"] = {"Status" : 1, "StatusMessage" : "" };

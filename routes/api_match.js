@@ -12,6 +12,7 @@ var dateFormat = require('dateformat');
 var match = require("../lib/match.js");
 var notif = require("../lib/notifications.js");
 var copytext = require("../lib/copytext.js");
+var UniqueConstraintError = models.sequelize.UniqueConstraintError;
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -20,8 +21,10 @@ router.use(compression({ threshold: 512}));
 // returns a Promise<match>
 function createNewMatch(cuser) {
 	console.log("Creating new match for user");
-	return Promise.promisify(match.matchUser)(cuser["ID"],1)
+	var cmatches = null;
+	return match.match(cuser["ID"],1)
 	.then(function(matches) {
+		cmatches = matches;
 		var newmatch = null;
 		var onehour = 1000*60*60;
 		var oneday = (onehour*24);
@@ -42,6 +45,14 @@ function createNewMatch(cuser) {
 			MatchRationale : "Automatch",
 			MatchExpireDate : dateFormat(exptime, "isoUtcDateTime"),
 			IsDead : 0
+		})
+		.catch(UniqueConstraintError, function(e) {
+			// this happens if the match have already been created parallel to this request
+			// we'll return the previously created match
+			return models.Matches.findOne({ where : {
+					OtherUserID : cmatches[0]["id"],
+					ReachingOutUserID : cuser["ID"], }
+			});
 		})
 		.then(function(cm) {
 			newmatch = cm;
@@ -120,7 +131,7 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 				res["MatchExpireTime"] = dateFormat(m["MatchExpireDate"], "mm/dd/yyyy HH:MM:ss", true);
 				// get latest one message
 				return models.Messages.findAll({where : {$or : [{ ReceiverID : m["ReachingOutUserID"], SenderID : m["OtherUserID"]  },
-					{ ReceiverID : m["OtherUserID"], SenderID : m["ReachingOutUserID"] } ] }, orderby : {desc : "ID"}, limit : 1});
+					{ ReceiverID : m["OtherUserID"], SenderID : m["ReachingOutUserID"] } ] }, order : "ID desc", limit : 1});
 			})
 			.then(function(msg) {
 				if ((msg == null) || (msg.length == 0)) {
@@ -177,7 +188,10 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 		//if a message exists in a conversation, no longer can be preferred
 		if ((matchresults.length > 0) && (matchresults[0]["LatestMessage"] == null))
 			matchresults[0]["IsPreferredMatch"] = "true";
-		var msgres = {"Matches" : matchresults, "NextMatchDate" : null, "Status" : {"Status" : "1", "StatusMessage" : "" } };
+		var nextMatchDate = null;
+		if (matchresults.length > 0)
+			nextMatchDate = matchresults[0]["MatchExpireTime"];
+		var msgres = {"Matches" : matchresults, "NextMatchDate" : nextMatchDate, "Status" : {"Status" : "1", "StatusMessage" : "" } };
 		return res.json({"GetMatchesForUserResult" : msgres });
 	})
 	.catch( apilib.errorhandler("GetMatchesForUserResult", req, res));

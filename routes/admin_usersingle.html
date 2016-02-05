@@ -8,7 +8,8 @@
 </table>
 <hr size="1" />
 <br />
-<a href="/admin/match/{{user.ID}}">Look up possible matches...</a>
+<a href="/admin/match/{{user.ID}}">Look up possible matches...</a>&nbsp;&nbsp;&nbsp;&nbsp;
+{{#approvable}}<form style="display:inline" action="/admin/user/{{user.ID}}/approve" method="post"><button type="submit">Approve user</button></form>{{/approvable}}
 <h3>Education:</h3>
 {{#user.UserEducations}}
 [{{StartYear}} - {{EndYear}}]  School: {{School.Name}}  Degree: {{Degree}}  Major: {{Major}} <br />
@@ -29,6 +30,7 @@
 {{#Interests}}<a href="/admin/users/skill/{{TagID}}">{{Tag.Name}}</a>&nbsp;&nbsp;{{/Interests}}
 
 <h3>Reaching out to:</h3>
+{{#hasreachout}}<form style="display:inline" action="/admin/user/{{user.ID}}/expirelatest" method="post"><button type="submit">Expire newest match</button></form>{{/hasreachout}}
 <table style="color:#000;" >
 	<thead><tr><th>With</th><th>Rationale</th><th># Messages</th><th>Thanks given</th></tr></thead>
 	<tbody>

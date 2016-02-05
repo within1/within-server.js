@@ -8,6 +8,10 @@ var compression = require('compression');
 var Promise = require('bluebird');
 var apilib = require("../lib/apilib.js");
 var userlib = require("../lib/userlib.js");
+var notif = require("../lib/notifications.js");
+var dateFormat = require('dateformat');
+var copytext = require("../lib/copytext.js");
+var adminlib = require("../lib/adminlib.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -31,14 +35,20 @@ router.post('/api/GetAllUsers', function(req, res) {
 	.catch( apilib.errorhandler("GetAllUsersResult", req, res));
 });
 
+
 // Changes the application status of a given user. Must have Admin authorization to call
 router.post('/api/ProcessApplication', function(req, res) {
 	apilib.requireParameters(req, ["AdminToken", "AdminID", "ApplicationUserID", "NewAppStatus"])
 	.then(function() { return userlib.validateAdminToken(req.body["AdminID"], req.body["AdminToken"]); })
 	.then(function() {
-		///////////////
+		return adminlib.ProcessUserApplication(req.body["ApplicationUserID"], req.body["NewAppStatus"])
 	})
-	.catch( apilib.errorhandler("GetProcessApplicationResult", req, res));
+	.then(function() {
+		var wres = apilib.formatAPICall( {"AppStatus" : req.body["NewAppStatus"], "DateAppStatusModified" : new Date(),
+					 "UserID" : req.body["ApplicationUserID"], "Status" : {"Status" : "1", "StatusMessage" : "Application successfully processed" } } ,["DateAppStatusModified"]);
+		res.json({"ProcessApplicationResult" : wres } );
+	})
+	.catch( apilib.errorhandler("ProcessApplicationResult", req, res));
 });
 
 module.exports = router;
