@@ -23,7 +23,7 @@ function routeProxy(funcname, postdata, cb) {
 	var url = baseurl+"WCF/Service1.svc/"+funcname;
 	url = baseurl+"WCF/"+funcname;
 
-	var apifuncs = ["GetAllUsers", "GetMatchesForUser"];
+	var apifuncs = ["GetAllUsers", "GetMatchesForUser", "UploadPicture"];
 	if (apifuncs.indexOf(funcname) != -1) {
 		url = baseurl+"api/"+funcname;
 	}
