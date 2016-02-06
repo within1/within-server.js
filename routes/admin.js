@@ -13,6 +13,7 @@ var adminlib = require("../lib/adminlib.js");
 var dateFormat = require('dateformat');
 var rp = require("request-promise");
 
+
 // add basic authentication for modules listed from here:
 router.use("/admin/", function(req, res, next) {
 	var user = basicAuth(req);
@@ -420,6 +421,16 @@ router.post("/admin/user/:userid/expirelatest", function(req, res) {
 		console.error(e);
 		return res.send(e);
 	})
+});
+
+// notifications lister
+router.get('/admin/notifications/', function(req, res) {
+	return models.Notifications.findAll({where : { hasSent : 0}, raw : true, order : "DateTarget asc"})
+	.then(function(u) {
+		var output = Mustache.render(fs.readFileSync("./routes/admin_notifs.html", "utf8"), {"notifs" : u } );
+		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+		res.send(framed);
+	});
 });
 
 module.exports = router;

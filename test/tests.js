@@ -13,10 +13,15 @@ module.exports = function(name, testData) {
 		compare = argv["compare"];
 	if (argv["print"] !== undefined)
 		debug = true;
+	var allreqs = [];
 	console.log("Using API URL "+url)
 	describe(name, function() {
 	    this.timeout(1200000);
 	    testData.forEach(function(cm) {
+	    	console.log(cm);
+	    	if (typeof(cm) == "function") {
+	    		cm = cm(allreqs);
+	    	}
 	        it(cm["msg"], function(done) {
 	        	if (debug)
 		            console.log("Posting ",url+cm["url"],"\ndata: ",JSON.stringify(cm["postdata"]));
@@ -32,6 +37,7 @@ module.exports = function(name, testData) {
 	            	}
 	            	if (debug)
 	                	console.log(JSON.stringify(body,0,4));
+	                allreqs.push(body);
 	                // check against expectations
 	                var checkResults = function(expect, ctree) {
 	                	for (var k in expect) {
