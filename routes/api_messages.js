@@ -12,6 +12,7 @@ var dateFormat = require('dateformat');
 var notif = require("../lib/notifications.js");
 var match = require("../lib/match.js");
 var copytext = require("../lib/copytext.js");
+var msglib =  require("../lib/messages.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -81,7 +82,7 @@ router.post("/api/GetMessageThread", function(req, res) {
 	});
 });
 
-
+// -----------------------------------------------------
 // Send message to another user
 router.post("/api/SendMessage", function(req, res) {
 	var msgres = {};
@@ -93,27 +94,11 @@ router.post("/api/SendMessage", function(req, res) {
 	.then(function(userdata) {
 		cuser = userdata;
 		// create new message
-		return models.Messages.create({
-			DateCreated : dateFormat(new Date(), "isoUtcDateTime"),
-			SenderID : req.body["UserID"],
-			ReceiverID : req.body["ReceiverID"],
-			Message1 : req.body["Message"],
-			Type : req.body["Type"],
-			HasRead : false
-		});
+		return msglib.AddMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"])
 	})
-	.then(function(newmsg) {
-		msgres["MessageID"] = newmsg["ID"];
-		//Get the match within which the message was sent, and update the NewestMessageID field
-		return match.getExistingMatch(req.body["UserID"], req.body["ReceiverID"] );
-	})
-	.then(function(msgmatch) {
-		if (msgmatch == null)
-			throw "SendMessage is being called in a context where there is no Match between the Users";
-		matchid = msgmatch["ID"];
-		return models.Matches.update({"NewestMessageID" : msgres["MessageID"]} ,{where : {ID : matchid }} );
-	})
-	.then(function() {
+	.then(function(msgarr) {
+		matchid = msgarr[1];
+		msgres["MessageID"] = msgarr[0];
 		return models.Users.findOne({where : {ID : req.body["ReceiverID"]}})
 	})
 	.then(function(ruser) {
@@ -131,10 +116,9 @@ router.post("/api/SendMessage", function(req, res) {
 			if (req.body["Type"] == 2)
 				msg = cuser["FirstName"]+" sent you contact details";
 			//immediate email notification
-			return notif.SendEmailNotification(ruser["ID"], new Date(), 0, notif.emailTypes["MessageReceived"], cuser["FirstName"], cuser["ImageURL"], msg, cuser["ID"] )
+			return notif.SendEmailNotification(ruser, new Date(), 0, notif.emailTypes["TypeEmailMessageReceived"], cuser["FirstName"], cuser["ImageURL"], msg, cuser["ID"] )
 			.then(function() { return copytext("./copytext.csv"); } )
 			.then(function(textvalues) {
-				console.log(textvalues);
 				//immediate push notification
 				return notif.SendPushNotification(ruser, new Date(),0,
 					textvalues.get("PushMessageReceivedCopy1")+" "+cuser["FirstName"]+" "+textvalues.get("PushMessageReceivedCopy2"),
@@ -147,7 +131,7 @@ router.post("/api/SendMessage", function(req, res) {
 		}
 	})
 	.then(function() {
-		msgres["Status"] = {"Status" : 1, "StatusMessage" : "" };
+		msgres["Status"] = {"Status" : "1", "StatusMessage" : "" };
 		res.json({"SendMessageResult" : msgres });
 	})
 	.catch(function(e) {
@@ -156,5 +140,79 @@ router.post("/api/SendMessage", function(req, res) {
 		res.json({"SendMessageResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
 	});
 });
+
+// Returns the details of the Message that the MessageID references
+// Used as a Push Notification callback
+router.post("/api/GetMessageDetails", function(req, res) {
+	var cmsg = null;
+	apilib.requireParameters(req, ["UserID", "UserToken", "MessageID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(userdata) {
+		return models.Messages.findOne({where : {ID : req.body["MessageID"]}})
+	})
+	.then(function(msgdata) {
+		if (msgdata == null)
+			throw "Message can not be found";
+		if ((msgdata["SenderID"] != req.body["UserID"]) && (msgdata["ReceiverID"] != req.body["UserID"]))
+			throw "Requested message does not belong to user";
+		cmsg = userlib.copyValues(msgdata.get({plain : true}),  ["ID", "DateCreated", "SenderID", "ReceiverID", "Type", "HasRead"]);
+		cmsg["Message"] = msgdata["Message1"];
+		cmsg = apilib.formatAPICall(cmsg, ["DateCreated"]);
+		return userlib.getPublicUserInfo(cmsg["SenderID"]);
+	})
+	.then(function(cu) {
+		cmsg["SenderDetail"] = cu["PublicUserInformation"];
+		return userlib.getPublicUserInfo(cmsg["ReceiverID"]);
+	})
+	.then(function(cu) {
+		cmsg["ReceiverDetail"] = cu["PublicUserInformation"];
+		var cres = {"MessageDetails" : cmsg};
+		cres["Status"] = {"Status" : "1", "StatusMessage" : "" };
+		res.json({"GetMessageDetailsResult" : cres });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch(function(e) {
+		console.error(e);
+		console.error(e.stack);
+		res.json({"GetMessageDetailsResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+});
+
+/// Returns a count of all unread messages for the calling user
+router.post("/api/GetTotalUnreadMessageCount", function(req, res) {
+	var cmsg = null;
+	apilib.requireParameters(req, ["UserID", "UserToken"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(userdata) {
+		return models.Messages.count({where : { ReceiverID : req.body["UserID"], HasRead : false }});
+	})
+	.then(function(cnt) {
+		var cres = apilib.formatAPICall({"TotalUnreadMessageCount" : cnt});
+		cres["Status"] = {"Status" : "1", "StatusMessage" : "" };
+		res.json({ "GetTotalUnreadMessageCountResult" : cres });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch(function(e) {
+		console.error(e);
+		console.error(e.stack);
+		res.json({"GetMessageDetailsResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+});
+
+// Returns a list of messages older than the Message referenced by MessageID
+router.post("/api/GetPastMessages", function(req, res) {
+	var cmsg = null;
+	apilib.requireParameters(req, ["UserID", "UserToken"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(userdata) {
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch(function(e) {
+		console.error(e);
+		console.error(e.stack);
+		res.json({"GetMessageDetailsResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+});
+
 
 module.exports = router;

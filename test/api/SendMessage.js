@@ -5,17 +5,35 @@ var persona = require("../persona.js")();
 
 test("SendMessage", [
 {
-    msg: "Sending message",
-    url: "SendMessage",
-    postdata :
-{
-    "Type": "1",
-    "Message": "Hello world!",
-    "ReceiverID": 43,
-	"UserID" : persona["UserID"],
-	"UserToken" : persona["UserToken"],
-},
+    msg: "Get list of current matches",
+    url: "GetMatchesForUser",
+    postdata : {
+    	"UserID" : persona["UserID"],
+    	"UserToken" :persona["UserToken"],
+    	"PageNumber" : "0",
+    	"GetNewMatch" : "0"
+    },
+    expect: {
+    }
+}, function(prevreqs) {
+	var otheruser = prevreqs[0]["GetMatchesForUserResult"]["Matches"][0]["UserInformation"];
+	return {
+		url: "SendMessage",
+	    postdata :
+	{
+	    "Type": "1",
+	    "Message": "Hello world!",
+	    "ReceiverID": otheruser["ID"],
+		"UserID" : persona["UserID"],
+		"UserToken" : persona["UserToken"],
+	},
 
-    expect : {}
+	    expect : {}
 
-}]);
+	}
+
+}
+
+
+
+]);

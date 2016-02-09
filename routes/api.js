@@ -11,6 +11,7 @@ var userlib = require("../lib/userlib.js");
 var dateFormat = require('dateformat');
 var notif = require("../lib/notifications.js");
 var copytext = require("../lib/copytext.js");
+var msglib =  require("../lib/messages.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -74,26 +75,6 @@ router.post('/api/AddEditContactCard', function(req, res) {
 	.catch( apilib.errorhandler("AddEditContactCardResult", req, res));
 })
 
-// ------------------------------------
-// returns: average thankyous, number of thankyous, latest thankyou for current user
-router.post('/api/GetUserAverageThankYous', function(req, res) {
-	apilib.requireParameters(req, ["UserToken", "UserID"])
-	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
-	.then(function() {
-		return Promise.all([
-			userlib.getAverageThanks(req.body["UserID"]),
-			userlib.getNumberOfThankYous(req.body["UserID"]),
-			userlib.getLatestUserThankYous(req.body["UserID"])
-		]);
-	})
-	.then(function(data) {
-		var apires = apilib.formatAPICall( { AverageThankYous : data[0], NumberOfThankYous : data[1], GetLatestUserThankYous : data[2] } );
-		apires["Status"] = {"Status" : "1", "StatusMessage" : "" };
-		res.json({"GetUserAverageThankYousResult" :  apires  });
-	})
-	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch( apilib.errorhandler("GetUserAverageThankYousResult", req, res));
-});
 
 // updates a coma-separated list of messageIDs' HasRead bitfield for current user
 router.post('/api/UpdateMessageState', function(req, res) {
@@ -119,6 +100,28 @@ router.post('/api/UpdateMessageState', function(req, res) {
 	.catch( apilib.errorhandler("UpdateMessageStateResult", req, res));
 });
 
+
+// ------------------------------------
+// returns: average thankyous, number of thankyous, latest thankyou for current user
+router.post('/api/GetUserAverageThankYous', function(req, res) {
+	apilib.requireParameters(req, ["UserToken", "UserID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function() {
+		return Promise.all([
+			userlib.getAverageThanks(req.body["UserID"]),
+			userlib.getNumberOfThankYous(req.body["UserID"]),
+			userlib.getLatestUserThankYous(req.body["UserID"])
+		]);
+	})
+	.then(function(data) {
+		var apires = apilib.formatAPICall( { AverageThankYous : data[0], NumberOfThankYous : data[1], GetLatestUserThankYous : data[2] } );
+		apires["Status"] = {"Status" : "1", "StatusMessage" : "" };
+		res.json({"GetUserAverageThankYousResult" :  apires  });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("GetUserAverageThankYousResult", req, res));
+});
+
 // lists all thankyous for a user
 router.post("/api/GetUsersAllThankYous", function(req, res) {
 	apilib.requireParameters(req, ["UserToken", "UserID", "OtherUserID"])
@@ -134,6 +137,67 @@ router.post("/api/GetUsersAllThankYous", function(req, res) {
 	.catch( apilib.errorhandler("GetUsersAllThankYousResult", req, res));
 });
 
+// Adds a Thank You from the User to the OtherUser
+router.post("/api/AddUserThankYou", function(req, res) {
+	var msgid = null;
+	var matchid = null;
+	var cuser = null;
+	var comment = (req.body["Comments"] !== undefined)?(req.body["Comments"]):("");
+	apilib.requireParameters(req, ["UserToken", "UserID", "OtherUserID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
+		var numstars = ((req.body["NumberOfStars"] === undefined) || (req.body["NumberOfStars"] == null))?("5"):(req.body["NumberOfStars"]);
+		cuser = authuser;
+		return models.UserRatings.create({
+			DateCreated : dateFormat(new Date(), "isoUtcDateTime"),
+			RaterID : authuser["ID"],
+			RatedID : req.body["OtherUserID"],
+			Rating : numstars,
+			isDeletedByRatedUser : false,
+			Comments : comment,
+		})
+	})
+	.then(function(newRating) {
+		return msglib.AddMessage(req.body["UserID"], req.body["OtherUserID"], "Thank you!", "4");
+	})
+	.then(function(msgarr) {
+		msgid = msgarr[0];
+		matchid = msgarr[1];
+		// get rated user for sending message
+		return models.Users.findOne({where : {ID : req.body["OtherUserID"] }})
+	})
+	.then(function(trgUser) {
+		if (trgUser == null)
+			throw "Target user for message can't be found: "+req.body["OtherUserID"];
+		// send notifications
+		if (trgUser["DeviceToken"] != null) {
+			return copytext("./copytext.csv")
+			.then(function(textvalues) { return notif.SendPushNotification(trgUser,  new Date(), 0, cuser["FirstName"]+textvalues.get("PushThanxReceivedCopy"), "", notif.pushTypes["ThanxReceived"] );  })
+			.then(function() {
+				return notif.SendEmailNotification(trgUser, new Date(), 0, notif.emailTypes["TypeEmailThanxReceived"], cuser["FirstName"], cuser["ImageURL"], comment, cuser["ID"] );
+			})
+		}
+	})
+	// return message's info
+	.then(function() {
+		return models.Messages.findOne({where : {ID : msgid}, raw : true });
+	})
+	.then(function(msg) {
+		if (msg == null)
+			throw "newly created message not found";
+		var cmsg =  apilib.formatAPICall(msg, ["DateCreated"]);
+		cmsg["Message"] = cmsg["Message1"];
+		delete cmsg["Message1"];
+		res.json({AddUserThankYouResult :
+			{
+				"RecentMesssageDetail" : cmsg,
+				"Status" : {"Status" : "1", "StatusMessage" : "" }
+			} });
+ 	})
+ 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("AddUserThankYouResult", req, res));
+});
+
 // deletes a thankyou message / rating for a user
 router.post("/api/DeleteThankYou", function(req, res) {
 	apilib.requireParameters(req, ["UserToken", "UserID", "RatingID"])
@@ -147,6 +211,32 @@ router.post("/api/DeleteThankYou", function(req, res) {
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
 	.catch( apilib.errorhandler("GetDeleteRatingResult", req, res));
 });
+
+// ------------------------------------
+// submits a single user rating
+router.post("/api/SubmitUserRating", function(req, res) {
+	var cuser = null;
+	apilib.requireParameters(req, ["UserToken", "UserID", "OtherUserID", "Rating"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(authuser) {
+		return models.Feedbacks.create({
+			UserID : authuser["ID"],
+			OtherUserID : req.body["OtherUserID"],
+			Rating : req.body["Rating"],
+			Type : 0,
+			Comments : (req.body["Comments"] !== undefined)?(req.body["Comments"]):(""),
+			DateCreated : dateFormat(new Date(), "isoUtcDateTime"),
+		})
+	})
+	.then(function(newFeedback) {
+		res.json({"SubmitUserRatingResult" : {"Status" : {"Status" : "1", "StatusMessage" : "" }}  });
+	})
+	//Set Match "ReachingOutUserHasViewedFlag" to true
+
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch( apilib.errorhandler("SubmitUserRatingResult", req, res));
+});
+
 
 // ------------------------------------
 // add user to waitlist & send email notification for within team
@@ -187,30 +277,6 @@ router.post("/api/AddUserToWaitlist", function(req, res) {
 })
 
 
-// ------------------------------------
-// submits a single user rating
-router.post("/api/SubmitUserRating", function(req, res) {
-	var cuser = null;
-	apilib.requireParameters(req, ["UserToken", "UserID", "OtherUserID", "Rating"])
-	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
-	.then(function(authuser) {
-		return models.Feedbacks.create({
-			UserID : authuser["ID"],
-			OtherUserID : req.body["OtherUserID"],
-			Rating : req.body["Rating"],
-			Type : 0,
-			Comments : (req.body["Comments"] !== undefined)?(req.body["Comments"]):(""),
-			DateCreated : dateFormat(new Date(), "isoUtcDateTime"),
-		})
-	})
-	.then(function(newFeedback) {
-		res.json({"SubmitUserRatingResult" : {"Status" : {"Status" : "1", "StatusMessage" : "" }}  });
-	})
-	//Set Match "ReachingOutUserHasViewedFlag" to true
-
-	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch( apilib.errorhandler("SubmitUserRatingResult", req, res));
-});
 
 module.exports = router;
 

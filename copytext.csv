@@ -1,25 +1,24 @@
-WithinTeamFirstMessageCopy	"Congrats on being accepted to the WITHIN community! You’ll be able to meet other awesome young techies to learn about different products, companies, industries and experiences while growing your professional network.
+ï»¿WithinTeamFirstMessageCopy,"Congrats on being accepted to the WITHIN community! Youâ€™ll be able to meet other awesome young techies to learn about different products, companies, industries and experiences while growing your professional network.
 
-Each week we’ll send you a recommendation of someone that’s relevant to your interests. Send them a message - you never know what you might learn! Be sure to give props to those that help you by saying ‘Thanx.’
+Each week weâ€™ll send you a recommendation of someone thatâ€™s relevant to your interests. Send them a message - you never know what you might learn! Be sure to give props to those that help you by saying â€˜Thanx.â€™
 
 Your profile may also be recommended to someone else, and they will be able to reach  out to you for advice. Giving back is an important value of our community, and receiving Thanx helps you get recognized as an influencer. (which has fun offline perks - trust us!)
 
-That’s it from us. Now go meet some awesome people and learn something new!
-"
-WithinFromEmail	hello@within.guru
-WithinFromName	The WITHIN Team
-EmailWelcomeSubject	Welcome to WITHIN!
-EmailIncompleteOnboardingSubject	"Oh, Oh, We're Halfway There"
-EmailMesssageReceivedSubject	New WITHIN Message from 
-EmailThanxReceivedSubject1	Congrats! 
-EmailThanxReceivedSubject2	" just gave you a Thanx"";        "
-EmailComeBackSubject	We miss you!
-EmailReferredSubject	Ca-ching! You referred 
-EmailYourApprovedSubject	"Congrats on being accepted to WITHIN!"";"
-PushMessageReceivedCopy1	New Message from
-PushMessageReceivedCopy2	! Ch-ch-check it out.
-PushThanxReceivedCopy	 just gave you Thanx! See what they said.
-PushNewMatchAvailableCopy 	"A new week, a new recommendation just for you. See who it is!"
-PushMatchExpiringCopy	Your recommendation's 'bout to expire. Message them before they're gone!
-PushYoureApprovedCopy1	Congrats
-PushYoureApprovedCopy2	 - You’re IN! Come check out your first recommendation.
+Thatâ€™s it from us. Now go meet some awesome people and learn something new!"
+WithinFromEmail,hello@within.guru
+WithinFromName,The WITHIN Team
+EmailWelcomeSubject,Welcome to WITHIN!
+EmailIncompleteOnboardingSubject,"Oh, Oh, We're Halfway There"
+EmailMesssageReceivedSubject,New WITHIN Message from
+EmailThanxReceivedSubject1,Congrats!
+EmailThanxReceivedSubject2, just gave you a Thanx
+EmailComeBackSubject,We miss you!
+EmailReferredSubject,Ca-ching! You referred
+EmailYourApprovedSubject,Congrats on being accepted to WITHIN!
+PushMessageReceivedCopy1,New Message from
+PushMessageReceivedCopy2,! Ch-ch-check it out.
+PushThanxReceivedCopy, just gave you Thanx! See what they said.
+PushNewMatchAvailableCopy,"A new week, a new recommendation just for you. See who it is!"
+PushMatchExpiringCopy,Your recommendation's 'bout to expire. Message them before they're gone!
+PushYoureApprovedCopy1,Congrats
+PushYoureApprovedCopy2, - Youâ€™re IN! Come check out your first recommendation.

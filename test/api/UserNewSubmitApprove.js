@@ -105,7 +105,6 @@ test("User reg, submit, approve combo", [
     expect: {
     }
 }, function(prevreqs) {
-	console.log("prev req: "+prevreqs);
 	var cuid = prevreqs[0]["AddEditFacebookUserResult"]["PublicUserInformation"]["ID"];
 	var ctoken = prevreqs[0]["AddEditFacebookUserResult"]["PrivateUserInformation"]["Token"];
 	return {
@@ -125,6 +124,28 @@ test("User reg, submit, approve combo", [
 		    }
 	    }
 	}
+}, function(prevreqs) {
+    var adminid = "86";
+    var ctoken = "Dbr/k5trWmO3XRTk3AWfX90E9jwpoh59w/EaiU9df/OkFa6bxluaKsQmBtKDNDHbBpplmFe2Zo06m6TOpxxDc3iaHQaFLsi1zXjBFsfQRVTewDXwdZZ5mxNdEp4HEdrIQY6VRqDvBzltACUdl2CB+gr1grGpDN+UmOnCUh9wD+BcROYXx5SmyTNtFYi+oKU7gjPLI9dWeoJWLVLUmAr6I27OvOdslDh7ctrNSHsbFYAtMI8XLPNx3IfF+ukq1RskAHfwYwBZ1Wuz8ofII/JqUranUrT9omVQ";
+    return {
+        msg: "Accepting user's application",
+        url: "ProcessApplication",
+        postdata :
+            {
+                "AdminID": adminid,
+                "AdminToken": ctoken,
+                "ApplicationUserID" : prevreqs[0]["AddEditFacebookUserResult"]["PublicUserInformation"]["ID"],
+                "NewAppStatus" : 2
+            },
+        expect: {
+            "ProcessApplicationResult"  : {
+                "AppStatus" : "2",
+                "Status": {
+                    "Status": "1"
+                }
+            }
+        }
+    }
 }
 
 ]);

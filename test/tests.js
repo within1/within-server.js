@@ -18,11 +18,11 @@ module.exports = function(name, testData) {
 	describe(name, function() {
 	    this.timeout(1200000);
 	    testData.forEach(function(cm) {
-	    	console.log(cm);
-	    	if (typeof(cm) == "function") {
-	    		cm = cm(allreqs);
-	    	}
-	        it(cm["msg"], function(done) {
+	    	var cmsg = (typeof(cm) == "function")?("Function..."):(cm["msg"]);
+	        it(cmsg, function(done) {
+	        	if (typeof(cm) == "function") {
+		    		cm = cm(allreqs);
+	    		}
 	        	if (debug)
 		            console.log("Posting ",url+cm["url"],"\ndata: ",JSON.stringify(cm["postdata"]));
 	            request({uri: url+cm["url"], method: "POST", json : cm["postdata"] }, function(error, res, body) {
