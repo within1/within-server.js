@@ -134,6 +134,7 @@ router.post("/api/SendMessage", function(req, res) {
 		msgres["Status"] = {"Status" : "1", "StatusMessage" : "" };
 		res.json({"SendMessageResult" : msgres });
 	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
 	.catch(function(e) {
 		console.error(e);
 		console.error(e.stack);
