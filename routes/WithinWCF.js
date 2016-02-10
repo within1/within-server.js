@@ -23,15 +23,16 @@ function routeProxy(funcname, postdata, cb) {
 	var baseurl = (process.env.NODE_ENV == "development") ? ("http://dev.within.guru/") : ("http://app.within.guru/");
 	if (process.env.NODE_ENV == "local")
 		baseurl = "http://within.local/";
-	/*
-	var url = baseurl+"WCF/Service1.svc/"+funcname;
-	url = baseurl+"WCF/"+funcname;
-
-	var apifuncs = ["GetAllUsers", "GetMatchesForUser", "UploadPicture"];
-	if (apifuncs.indexOf(funcname) != -1) {
+	var url = "";
+	if (process.env.NODE_ENV == "live") {
+		url = baseurl+"WCF/Service1.svc/"+funcname;
+		var apifuncs = ["GetAllUsers", "GetMatchesForUser", "UploadPicture"];
+		if (apifuncs.indexOf(funcname) != -1) {
+			url = baseurl+"api/"+funcname;
+		}
+	} else {
 		url = baseurl+"api/"+funcname;
-	}*/
-	url = baseurl+"api/"+funcname;
+	}
 	console.log(url);
 	request({uri: url, method: "POST", json : postdata }, function(error, res, body) {
 		if (error != null)
