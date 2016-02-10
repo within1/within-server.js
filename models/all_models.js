@@ -78,6 +78,51 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "Events",  timestamps: false }), 
+	"RequestLogs" : sequelize.define("RequestLogs",{
+    "ID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true,
+        "autoIncrement": true
+    },
+    "UserID": {
+        "type": "BIGINT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Request": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Response": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "DateRequest": {
+        "type": "DATETIME",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "URL": {
+        "type": "NVARCHAR",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "StatusCode": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    }
+}, {tableName : "RequestLogs",  timestamps: false }), 
 	"Matches" : sequelize.define("Matches",{
     "ID": {
         "type": "BIGINT",
@@ -1027,7 +1072,7 @@ module.exports = function(sequelize) {
         "type": "NVARCHAR",
         "allowNull": false,
         "defaultValue": null,
-        "primaryKey": false
+        "primaryKey": true
     },
     "IsAdmin": {
         "type": "BIT",
@@ -1268,14 +1313,14 @@ res.Users.hasMany(res.Matches, {foreignKey: "OtherUserID" , as : "MatchesOtherUs
 res.Matches.belongsTo(res.Users, {foreignKey: "OtherUserID" , as : "MatchesOtherUser" } );
 res.Users.hasMany(res.Matches, {foreignKey: "ReachingOutUserID" , as : "MatchesReachingOutUser" } );
 res.Matches.belongsTo(res.Users, {foreignKey: "ReachingOutUserID" , as : "MatchesReachingOutUser" } );
-res.Users.hasMany(res.UserContactCards, {foreignKey: "UserID" } );
-res.UserContactCards.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Locations.hasMany(res.UserEducations, {foreignKey: "LocationID" } );
 res.UserEducations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
 res.Schools.hasMany(res.UserEducations, {foreignKey: "SchoolID" } );
 res.UserEducations.belongsTo(res.Schools, {foreignKey: "SchoolID" } );
 res.Users.hasMany(res.UserEducations, {foreignKey: "UserID" } );
 res.UserEducations.belongsTo(res.Users, {foreignKey: "UserID" } );
+res.Users.hasMany(res.UserContactCards, {foreignKey: "UserID" } );
+res.UserContactCards.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Employers.hasMany(res.UserEmployments, {foreignKey: "EmployerID" } );
 res.UserEmployments.belongsTo(res.Employers, {foreignKey: "EmployerID" } );
 res.Locations.hasMany(res.UserEmployments, {foreignKey: "LocationID" } );
@@ -1298,10 +1343,10 @@ res.Entities.hasMany(res.TagInstances, {foreignKey: "OwnerID" } );
 res.TagInstances.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.Tags.hasMany(res.TagInstances, {foreignKey: "TagID" } );
 res.TagInstances.belongsTo(res.Tags, {foreignKey: "TagID" } );
-res.Entities.hasMany(res.Aliases, {foreignKey: "OwnerID" } );
-res.Aliases.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.EntityTypes.hasMany(res.Entities, {foreignKey: "EntityTypeID" } );
 res.Entities.belongsTo(res.EntityTypes, {foreignKey: "EntityTypeID" } );
+res.Entities.hasMany(res.Aliases, {foreignKey: "OwnerID" } );
+res.Aliases.belongsTo(res.Entities, {foreignKey: "OwnerID" } );
 res.Users.hasMany(res.UserRatings, {foreignKey: "RatedID" , as : "UserRatingsRated" } );
 res.UserRatings.belongsTo(res.Users, {foreignKey: "RatedID" , as : "UserRatingsRated" } );
 res.Users.hasMany(res.UserRatings, {foreignKey: "RaterID" , as : "UserRatingsRater" } );

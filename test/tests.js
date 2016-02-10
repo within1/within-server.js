@@ -4,7 +4,7 @@ var request = require("request");
 var argv = require('minimist')(process.argv.slice(2));
 
 module.exports = function(name, testData) {
-	var url = "http://127.0.2.2/api/";
+	var url = "http://within.local/api/";
 	var compare = null;
 	var debug = false;
 	if (argv["url"] !== undefined)

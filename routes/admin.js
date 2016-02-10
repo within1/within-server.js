@@ -12,6 +12,7 @@ var match = require("../lib/match.js");
 var adminlib = require("../lib/adminlib.js");
 var dateFormat = require('dateformat');
 var rp = require("request-promise");
+var notif = require("../lib/notifications.js");
 
 
 // add basic authentication for modules listed from here:
@@ -427,7 +428,37 @@ router.post("/admin/user/:userid/expirelatest", function(req, res) {
 router.get('/admin/notifications/', function(req, res) {
 	return models.Notifications.findAll({where : { hasSent : 0}, raw : true, order : "DateTarget asc"})
 	.then(function(u) {
+		var revTable = {};
+		for (var i in notif.emailTypes)
+			revTable[notif.emailTypes[i]] = i;
+		for (var i in u) {
+			u[i]["EmailType"] = "";
+			if (u[i]["Type"] != null)
+				u[i]["EmailType"] = revTable[u[i]["Type"]];
+		}
 		var output = Mustache.render(fs.readFileSync("./routes/admin_notifs.html", "utf8"), {"notifs" : u } );
+		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+		res.send(framed);
+	});
+});
+
+// API calls lister
+router.get('/admin/apicalls/', function(req, res) {
+	return models.RequestLogs.findAll({ order : "DateRequest desc", limit : 50 })
+	.then(function(u) {
+		AddBreaks = function(s) {
+			console.log(s);
+			var k = (JSON.stringify( JSON.parse(s),0,4)).split("\n");
+			for (var i in k) {
+				k[i] = (k[i].match(/.{1,64}/g)).join("<wbr>");
+			}
+			return k.join("<br/>");
+		}
+		for (var i in u) {
+			u[i]["Request"] = AddBreaks(u[i]["Request"]);
+			u[i]["Response"] = AddBreaks(u[i]["Response"]);
+		}
+		var output = Mustache.render(fs.readFileSync("./routes/admin_apicalls.html", "utf8"), {"calls" : u } );
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 		res.send(framed);
 	});

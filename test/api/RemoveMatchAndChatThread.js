@@ -1,20 +1,19 @@
-// GetPastMessages
+// RemoveMatchAndChatThread
 
 var test = require("../tests.js");
 var persona = require("../persona.js")();
 
 
-test("GetPastMessages", [
+test("RemoveMatchAndChatThread", [
 {
-    msg: "GetPastMessages",
-    url: "GetPastMessages",
+    msg: "RemoveMatchAndChatThread",
+    url: "RemoveMatchAndChatThread",
     postdata : {
     	"UserID" : persona["UserID"],
     	"UserToken" :persona["UserToken"],
-    	"SenderID" : persona["anotherUserID"],
-    	"MessageID" : 10000,
-    	"MessageCount" : 100
+    	"OtherUserID" : persona["anotherUserID"],
     },
     expect: {
     }
 }]);
+

@@ -12,6 +12,9 @@ var Promise = require('bluebird');
 var request = require("request");
 var env       = process.env.NODE_ENV || "development";
 var imagedir = config.imagedir[env];
+var models  = require('../models');
+var dateFormat = require('dateformat');
+
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -33,8 +36,12 @@ function routeProxy(funcname, postdata, cb) {
 		if (error != null)
 			console.error(error);
 		console.log("response from "+url+" ("+res.statusCode+")");
-		console.log(body);
-		cb(null, body);
+		models.RequestLogs.create({"Request" : JSON.stringify(postdata), "Response" : JSON.stringify(body), "URL" : funcname, "StatusCode" : res.statusCode, "UserID" : (postdata["UserID"] !== undefined)?(postdata["UserID"]):(null),
+			"DateRequest" : dateFormat(new Date(), "isoUtcDateTime") })
+		.then(function() {
+			cb(null, body);
+		})
+
 	});
 }
 

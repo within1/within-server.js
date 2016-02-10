@@ -4,16 +4,14 @@ var test = require("../tests.js");
 var persona = require("../persona.js")();
 
 
-test("GetPastMessages", [
+test("DeleteChatThread", [
 {
-    msg: "GetPastMessages",
-    url: "GetPastMessages",
+    msg: "DeleteChatThread",
+    url: "DeleteChatThread",
     postdata : {
     	"UserID" : persona["UserID"],
     	"UserToken" :persona["UserToken"],
-    	"SenderID" : persona["anotherUserID"],
-    	"MessageID" : 10000,
-    	"MessageCount" : 100
+    	"OtherUserID" : persona["anotherUserID"],
     },
     expect: {
     }

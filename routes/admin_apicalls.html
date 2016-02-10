@@ -1,0 +1,28 @@
+<h1>API calls listing</h1>
+<br /><br />
+<hr size="1" />
+
+ <table class="tablesorter" style="min-width:660px;">
+	<thead>
+		<th>Date</th>
+		<th>API Endpoint</th>
+		<th>User ID</th>
+		<th>Status Code</th>
+		<th>Request</th>
+		<th>Response</th>
+	</thead>
+	<tbody>
+		{{#calls}}
+		<tr>
+			<td>{{DateRequest}}</td>
+			<td>{{URL}}</td>
+			<td>{{UserID}}</td>
+			<td>{{StatusCode}}</td>
+			<td>{{{Request}}}</td>
+			<td>{{{Response}}}</td>
+		</tr>
+		{{/calls}}
+	</tbody>
+</table>
+<br />
+

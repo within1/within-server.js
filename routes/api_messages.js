@@ -201,18 +201,122 @@ router.post("/api/GetTotalUnreadMessageCount", function(req, res) {
 
 // Returns a list of messages older than the Message referenced by MessageID
 router.post("/api/GetPastMessages", function(req, res) {
-	var cmsg = null;
-	apilib.requireParameters(req, ["UserID", "UserToken"])
+	var msgs = null;
+	apilib.requireParameters(req, ["UserID", "UserToken", "SenderID", "MessageID"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(userdata) {
+		return models.Messages.findAll({where : {
+			  $or : [
+			  	{ SenderID : req.body["SenderID"], ReceiverID : req.body["UserID"] },
+			  	{ ReceiverID : req.body["SenderID"], SenderID : req.body["UserID"] }
+			  ],
+			  ID : { lt : req.body["MessageID"]  }
+		}, order : "ID desc" , raw : true })
+	})
+	.then(function(msglist) {
+		msgs = msglist;
+		// Mark all messages as read
+		var markallread = [];
+		var markAsRead = function(cid) {
+			return function() {
+				return models.Messages.update({HasRead : true}, {where : {ID : cid}});
+			}
+		};
+		for (var i in msglist) {
+			markallread.push(markAsRead(msglist[i]["ID"]));
+		}
+		return Promise.all(markallread);
+	})
+	.then(function() {
+		// are there any unread messages left?
+		return models.Messages.count({where : { SenderID : req.body["SenderID"], ReceiverID : req.body["UserID"], HasRead: false  }})
+	})
+	.then(function(unreadcnt) {
+		// format response
+		var resmsgs = [];
+		for (var i in msgs) {
+			var newmsg = userlib.copyValues(msgs[i], ["ID", "DateCreated", "SenderID", "ReceiverID", "Type", "HasRead"]);
+			newmsg["Message"] = msgs[i]["Message1"];
+			resmsgs.push(apilib.formatAPICall(newmsg, ["DateCreated"]));
+		}
+		var msg = (resmsgs.length == 0)?("No Records"):("");
+		res.json({"GetPastMessagesResult" : {
+			"IsUnreadMessages" : (unreadcnt > 0)?("True"):("False"),
+			"MesssageList" : resmsgs,
+			"Status" : {"Status" : "1", "StatusMessage" : msg }
+		} });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
 	.catch(function(e) {
 		console.error(e);
 		console.error(e.stack);
-		res.json({"GetMessageDetailsResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+		res.json({"GetPastMessagesResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+});
+
+// Deletes the Match and any messages between Users
+router.post("/api/DeleteChatThread", function(req, res) {
+	var msgs = null;
+	apilib.requireParameters(req, ["UserID", "UserToken", "OtherUserID" ])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function(userdata) {
+		// remove all previous chat messages
+		return models.Messages.destroy({where : {
+			  $or : [
+			  	{ SenderID : req.body["OtherUserID"], ReceiverID : req.body["UserID"] },
+			  	{ ReceiverID : req.body["OtherUserID"], SenderID : req.body["UserID"] }
+			  ] }
+		})
+	})
+	// unmatch users
+	.then(function() { return match.getExistingMatch(req.body["UserID"], req.body["OtherUserID"] ) })
+	.then(function(cmatch) {
+		if (cmatch != null)
+			return models.Matches.destroy({where : {ID : cmatch["ID"]}});
+	})
+	.then(function() {
+		res.json({"DeleteChatThreadResult" : {
+			"Status" : {"Status" : "1", "StatusMessage" : "Chat thread deleted successfully." }
+		} });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch(function(e) {
+		console.error(e);
+		console.error(e.stack);
+		res.json({"DeleteChatThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
+	});
+});
+
+
+
+// same UI function as "DeleteChatThread" - the purpose of this one is to preserve the Matches and associated Messages in the DB
+router.post("/api/RemoveMatchAndChatThread", function(req, res) {
+	var msgs = null;
+	apilib.requireParameters(req, ["UserID", "UserToken", "OtherUserID"])
+	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
+	.then(function() { return match.getExistingMatch(req.body["UserID"], req.body["OtherUserID"] ) })
+	.then(function(match) {
+		//get match, switch one of the "Deleted" flags on
+		if (match == null)
+			return;
+		if (match["ReachingOutUserID"] == req.body["UserID"])
+			return models.Matches.update({"ReachingOutUserHasDeletedFlag" : true, "IsDead" : true}, {where : {ID : cmatch["ID"]}} );
+		else
+			return models.Matches.update({"OtherUserHasDeletedFlag" : true, "IsDead" : true}, {where : {ID : cmatch["ID"]}} );
+	})
+	.then(function() {
+		res.json({"RemoveMatchAndChatThreadResult" : {
+			"Status" : {"Status" : "1", "StatusMessage" : "" }
+		} });
+	})
+	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
+	.catch(function(e) {
+		console.error(e);
+		console.error(e.stack);
+		res.json({"RemoveMatchAndChatThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
 	});
 });
 
 
 module.exports = router;
+
