@@ -12,6 +12,9 @@ var dateFormat = require('dateformat');
 var match = require("../lib/match.js");
 var notif = require("../lib/notifications.js");
 
+router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
+router.use(compression({ threshold: 512}));
+
 
 router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 	var usermodel = null;

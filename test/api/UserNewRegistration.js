@@ -1,6 +1,6 @@
 // New user registration test
 
-var test = require("./tests.js");
+var test = require("../tests.js");
 
 var randnum = Math.floor(Math.random() * 1000000);
 

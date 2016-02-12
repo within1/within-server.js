@@ -53,6 +53,12 @@ config  = {
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",
 		}
+	},
+	apn : {
+		local : { pfx : "../PushNotification_Sandbox2.p12", production : false, passphrase : "ah16B0xrcH" },
+		development : { pfx : "../PushNotification_Sandbox2.p12", production : false, passphrase : "ah16B0xrcH" },
+		live : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
+
 	}
 };
 

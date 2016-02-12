@@ -9,7 +9,7 @@ var dateFormat = require('dateformat');
 var Promise = require('bluebird');
 
 
-router.use(bodyParser.urlencoded({ extended: false }));
+//  router.use(bodyParser.urlencoded({ extended: false }));
 router.use(compression({ threshold: 512}));
 
 
@@ -18,7 +18,15 @@ router.get("/api/MandrillInboundEventCall", function(req, res) {
 })
 
 router.post("/api/MandrillInboundEventCall", function(req, res) {
-	console.log("Mandrill inbound call: ", JSON.stringify(req.body,0,4));
+	if (req.body["mandrill_events"] === undefined)
+		return res.json({"Error" : "No mandrill_events in post message"})
+	var mbody = null;
+	try {
+		mbody = JSON.parse(req.body["mandrill_events"]);
+	} catch (e) {
+		return  res.json({"Error" : "mandrill_events invalid format"})
+	}
+	console.log("Mandrill inbound call: ", JSON.stringify(mbody,0,4));
 	res.json({"ok" : "ok"});
 })
 
