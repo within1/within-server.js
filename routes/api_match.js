@@ -12,6 +12,8 @@ var dateFormat = require('dateformat');
 var match = require("../lib/match.js");
 var notif = require("../lib/notifications.js");
 var copytext = require("../lib/copytext.js");
+var async = require("async");
+
 var UniqueConstraintError = models.sequelize.UniqueConstraintError;
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
@@ -46,6 +48,24 @@ function createNewMatch(cuser) {
 			MatchExpireDate : dateFormat(exptime, "isoUtcDateTime"),
 			IsDead : 0
 		})
+		.then(function(cm) {
+			// only insert match expiration, if a new match has indeed been created
+			newmatch = cm;
+			if (cuser["DeviceToken"] == null)
+				return newmatch;
+			// cancel previous notifications
+			return models.Notifications.update({"HasSent" : 1}, {where : {
+				$or : [{"SourceTable" : "NewMatchAvailable" }, {"SourceTable" : "ExpiringMatch" }],
+				UserID : cuser["ID"], "HasSent" : 0
+			}
+			})
+			.then(function() { return copytext("./copytext.csv"); })
+			.then(function(textvalues) {
+				return notif.SendPushNotification(cuser, cdate, notif.HrsMatchExpiration, textvalues.get("PushNewMatchAvailableCopy"), "", notif.pushTypes["NewMatchAvailable"]);
+			})
+			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
+			.then(function(newmsg) { return newmatch; } );
+		})
 		.catch(UniqueConstraintError, function(e) {
 			// this happens if the match have already been created parallel to this request
 			// we'll return the previously created match
@@ -54,26 +74,14 @@ function createNewMatch(cuser) {
 					ReachingOutUserID : cuser["ID"], }
 			});
 		})
-		.then(function(cm) {
-			newmatch = cm;
-			if (cuser["DeviceToken"] == null)
-				return newmatch;
-			return copytext("./copytext.csv")
-			.then(function(textvalues) {
-				return notif.SendPushNotification(cuser, cdate, notif.HrsMatchExpiration, textvalues.get("PushNewMatchAvailableCopy"), "", notif.pushTypes["NewMatchAvailable"]);
-			})
-			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
-			.then(function(newmsg) { return newmatch; } );
-		})
 	});
 }
 
-
-// returns matches for given user
-router.post("/api/GetMatchesForUser", function(req, res) {
+// returns matches, or automagically create a new match for given user
+function GetMatchesProcessPerUser(req, res) {
 	var cuser = null;
 	var allmatches = [];
-	apilib.requireParameters(req, ["UserToken", "UserID"])
+	return apilib.requireParameters(req, ["UserToken", "UserID"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(authuser) {
 		cuser = authuser;
@@ -158,10 +166,11 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 		return matchresults;
 	})
 	.then(function(matchresults) {
-		// remove all expired & no-message matches
+		// remove all expired & no-message matches; and related notifications
 		if (matchresults.length < 2)
 			return matchresults;
 		var removeids = [];
+		var removenotifs = [];
 		for (var i = 1; i < matchresults.length; i++) {
 			if (matchresults[i]["LatestMessage"] == null) {
 				removeids.push(matchresults[i]["MatchID"]);
@@ -195,6 +204,28 @@ router.post("/api/GetMatchesForUser", function(req, res) {
 		return res.json({"GetMatchesForUserResult" : msgres });
 	})
 	.catch( apilib.errorhandler("GetMatchesForUserResult", req, res));
+}
+
+
+// tackling race condition via user queue
+// (this presumes load balancing to be done on IP basis,
+// so that same user's request are handled by the same server)
+var peruserqueue = {};
+
+router.post("/api/GetMatchesForUser", function(req, res) {
+	if (req.body["UserID"] === undefined) {
+		return res.json({"GetMatchesForUserResult" : {"Status" : {"Status" : 0, "StatusMessage" : "UserID parameter was either null or an empty string." }} });
+	}
+	var cid = req.body["UserID"];
+	if (peruserqueue[cid] === undefined)
+		peruserqueue[cid] = async.queue(function(task, callback) {
+			console.log("processing task ",Object.keys(task)  );
+			var q = task["req"];
+			var s = task["res"];
+			return GetMatchesProcessPerUser(q, s)
+			.then(function() {  callback(); });
+		}, 1);
+	peruserqueue[cid].push({"req" : req, "res" : res} );
 });
 
 module.exports = router;

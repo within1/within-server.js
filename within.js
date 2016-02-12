@@ -1,12 +1,9 @@
 var fs = require("fs");
 var express = require("express");
-var session = require("express-session");
 var compression = require('compression')
 var http = require('http');
 var models = require("./models");
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser');
-var SequelizeStore = require('connect-session-sequelize')(session.Store);
 
 // start web server
 var app = express();
@@ -16,20 +13,6 @@ app.use('/static/', express.static(__dirname + '/static/'));
 
 app.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
-
-// apply sessions
-/*
-app.use(cookieParser())
-app.use(session({
-  secret: 'keyboard cat',
-  store: new SequelizeStore({
-    db: models.sequelize
-  }),
-  resave: true,
-  saveUninitialized : true,
-  proxy: true // if you do SSL outside of node.
-}))
-*/
 
 app.use(function(req, res, next) {
   console.log("Requested URL: ",req.url);
