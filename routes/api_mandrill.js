@@ -22,3 +22,4 @@ router.post("/api/MandrillInboundEventCall", function(req, res) {
 	res.json({"ok" : "ok"});
 })
 
+module.exports = router;
