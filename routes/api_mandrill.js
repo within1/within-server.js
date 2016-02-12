@@ -10,7 +10,6 @@ var Promise = require('bluebird');
 
 
 router.use(bodyParser.urlencoded({ extended: false }));
-router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
 
 
@@ -24,3 +23,4 @@ router.post("/api/MandrillInboundEventCall", function(req, res) {
 })
 
 module.exports = router;
+
