@@ -49,9 +49,15 @@ config  = {
 			TeamWithinMessageEmail : "joel@custlabs.com",
 		},
 		development : {
+			FlagEmail	: "joel@custlabs.com",
+			WaitlistEmail : "joel@custlabs.com",
+			TeamWithinMessageEmail : "joel@custlabs.com",
+
+/*
 			FlagEmail	: "hello+flag@within.guru",
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",
+			*/
 		},
 		live : {
 			FlagEmail	: "hello+flag@within.guru",
