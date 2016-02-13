@@ -55,10 +55,9 @@ config  = {
 		}
 	},
 	apn : {
-		local : { pfx : "../PushNotification_Sandbox2.p12", production : false, passphrase : "ah16B0xrcH" },
-		development : { pfx : "../PushNotification_Sandbox2.p12", production : false, passphrase : "ah16B0xrcH" },
+		local : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
+		development : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
 		live : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
-
 	}
 };
 
