@@ -41,6 +41,11 @@ function deleteUser(uid) {
 
 
 if (!module.parent) {
-	console.log("Removing user")
-	deleteUser(141);
+	var cuid = process.argv.slice(2);
+	if (cuid.length == 0) {
+		console.log("Usage: deleteuser.js [uid]");
+		process.exit();
+	}
+	console.log("Removing user "+cuid[0])
+	deleteUser(cuid[0]);
 }
