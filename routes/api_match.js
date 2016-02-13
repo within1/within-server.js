@@ -19,6 +19,19 @@ var UniqueConstraintError = models.sequelize.UniqueConstraintError;
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
 
+// calculates the expiry date, and number of hours from current date until then
+function calcExpiryHourTime(matchExpiration, hrsPastMidnight) {
+	var expDate = new Date();
+	expDate.setHours(expDate.getHours() + matchExpiration);
+	var notifDate = new Date(expDate);
+	if (notifDate.getHours() > hrsPastMidnight)
+		notifDate.setDate(notifDate.getDate() + 1);
+	notifDate.setHours( hrsPastMidnight );
+	notifDate.setMinutes(0);
+	var hrsLeft = Math.floor( (notifDate - new Date() ) / (60*60*1000) );
+	return [expDate, hrsLeft];
+}
+
 // ------------------------------------
 // returns a Promise<match>
 function createNewMatch(cuser) {
@@ -28,10 +41,9 @@ function createNewMatch(cuser) {
 	.then(function(matches) {
 		cmatches = matches;
 		var newmatch = null;
-		var onehour = 1000*60*60;
-		var oneday = (onehour*24);
-		var cdate = Math.floor(new Date() / (oneday)) * oneday + notif.HrsPastMidnightToSendMatchNotification * onehour;
-		var exptime = cdate + notif.HrsMatchExpiration * onehour;
+		var exparr = calcExpiryHourTime(notif.HrsMatchExpiration, notif.HrsPastMidnightToSendMatchNotification);
+		var exptime = exparr[0];
+		var hrsLeft = exparr[1];
 		if (matches.length == 0)
 			return null;
 		console.log("New match ",matches);
@@ -40,7 +52,6 @@ function createNewMatch(cuser) {
 			MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
 			OtherUserID : matches[0]["id"],
 			ReachingOutUserID : cuser["ID"],
-			MatchDate : dateFormat( new Date(), "isoUtcDateTime"),
 			ReachingOutUserHasViewedFlag : 0,
 			ReachingOutUserHasDeletedFlag : 0,
 			OtherUserHasDeletedFlag : 0,
@@ -61,7 +72,7 @@ function createNewMatch(cuser) {
 			})
 			.then(function() { return copytext("./copytext.csv"); })
 			.then(function(textvalues) {
-				return notif.SendPushNotification(cuser, cdate, notif.HrsMatchExpiration, textvalues.get("PushNewMatchAvailableCopy"), "", notif.pushTypes["NewMatchAvailable"]);
+				return notif.SendPushNotification(cuser, hrsLeft, textvalues.get("PushNewMatchAvailableCopy"), "", notif.pushTypes["NewMatchAvailable"]);
 			})
 			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
 			.then(function(newmsg) { return newmatch; } );

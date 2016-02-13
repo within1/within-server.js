@@ -64,6 +64,8 @@ router.post('/WithinWCF/Service1.svc/:apicall', function(req, res) {
 });
 
 router.use('/WithinWCF/ImageUpload/', express.static(imagedir));
-
+router.use("/WithinWCF/ImageUpload/*", function(req, res) {
+	res.sendStatus(404);
+})
 
 module.exports = router;

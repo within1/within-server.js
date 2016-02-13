@@ -5,6 +5,7 @@ var session = require("express-session");
 var router  = express.Router();
 var cookieParser = require('cookie-parser');
 var SequelizeStore = require('connect-session-sequelize')(session.Store);
+var favicon = require('serve-favicon');
 
 // apply sessions
 /*
@@ -25,4 +26,8 @@ router.get('/', function(req, res) {
 	res.send("Within main server");
 });
 
+
+router.use(favicon(__dirname + '/../static/favicon.ico'));
+
 module.exports = router;
+
