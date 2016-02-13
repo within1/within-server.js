@@ -116,11 +116,11 @@ router.post("/api/SendMessage", function(req, res) {
 			if (req.body["Type"] == 2)
 				msg = cuser["FirstName"]+" sent you contact details";
 			//immediate email notification
-			return notif.SendEmailNotification(ruser, new Date(), 0, notif.emailTypes["TypeEmailMessageReceived"], cuser["FirstName"], cuser["ImageURL"], msg, cuser["ID"] )
+			return notif.SendEmailNotification(ruser, 0, notif.emailTypes["TypeEmailMessageReceived"], cuser["FirstName"], cuser["ImageURL"], msg, cuser["ID"] )
 			.then(function() { return copytext("./copytext.csv"); } )
 			.then(function(textvalues) {
 				//immediate push notification
-				return notif.SendPushNotification(ruser, new Date(),0,
+				return notif.SendPushNotification(ruser, 0,
 					textvalues.get("PushMessageReceivedCopy1")+" "+cuser["FirstName"]+" "+textvalues.get("PushMessageReceivedCopy2"),
 					msgres["MessageID"], notif.pushTypes["MessageReceived"]  );
 			})

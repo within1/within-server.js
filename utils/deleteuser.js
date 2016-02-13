@@ -42,5 +42,5 @@ function deleteUser(uid) {
 
 if (!module.parent) {
 	console.log("Removing user")
-	deleteUser(140);
+	deleteUser(141);
 }
