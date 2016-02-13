@@ -4,6 +4,8 @@ var compression = require('compression')
 var http = require('http');
 var models = require("./models");
 var bodyParser = require('body-parser');
+var daemon = require("./lib/daemon.js");
+var env = process.env.NODE_ENV || "local";
 
 // start web server
 var app = express();
@@ -39,6 +41,7 @@ app.use(function(req, res, next) {
   res.status(404).send("No API defined for: "+req.url);
 });
 
+// start web server
 var server = http.createServer(app);
 if (process.env.PORT == undefined) {
 	process.env.PORT = 5000;
@@ -46,6 +49,11 @@ if (process.env.PORT == undefined) {
 } else {
 	server.listen(process.env.PORT);
 }
+
 console.log("Server started on port "+process.env.PORT);
 
-
+// start notification daemon
+if (env != "local") {
+  daemon.daemonStart();
+  console.log("Notification daemon started");
+}

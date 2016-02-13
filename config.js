@@ -36,6 +36,11 @@ config  = {
 		development: "c:\\inetpub\\wwwroot\\WithinWCF\\ImageUpload\\",
 		live: "c:\\ftproot\\Within\\WithinWCF\\ImageUpload\\",
 	},
+	imageURL : {
+		local : "https://dev.within.guru/WithinWCF/ImageUpload/",
+		development: "https://dev.within.guru/WithinWCF/ImageUpload/",
+		live: "https://app.within.guru/WithinWCF/ImageUpload/",
+	},
 	mandrill : "-9yaWsYS5OWZ5V-j9LCz8w",
 	emails : {
 		local : {

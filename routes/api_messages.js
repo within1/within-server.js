@@ -85,52 +85,12 @@ router.post("/api/GetMessageThread", function(req, res) {
 // -----------------------------------------------------
 // Send message to another user
 router.post("/api/SendMessage", function(req, res) {
-	var msgres = {};
-	var allmsgs = null;
-	var matchid = null;
-	var cuser = null;
 	apilib.requireParameters(req, ["UserID", "UserToken", "ReceiverID", "Message", "Type"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
-	.then(function(userdata) {
-		cuser = userdata;
-		// create new message
-		return msglib.AddMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"])
-	})
-	.then(function(msgarr) {
-		matchid = msgarr[1];
-		msgres["MessageID"] = msgarr[0];
-		return models.Users.findOne({where : {ID : req.body["ReceiverID"]}})
-	})
-	.then(function(ruser) {
-		if (ruser == null)
-			throw "Receiving user can't be found for message";
-		// send message to receiver
-		if (ruser["IsTeamWithin"])
-			// user PMd the within team
-			return notif.SendAdminMail("TeamWithinMessageEmail", cuser["FirstName"]+" "+cuser["LastName"]+" messaged the WITHIN Team",
-				"This is what " +cuser["FirstName"]+" has to say: \n"+req.body["Message"]+"\nSent: "+(new Date()),
-				{"headers" : {"Reply-To" : cuser["EmailAddress"] }, "from_email" : cuser["EmailAddress"], "from_name" : cuser["FirstName"]+" "+cuser["LastName"] });
-		// send a notification for all except thanx messages
-		if ((cuser["DeviceToken"] != null) && ((req.body["Message"].length > 0) && (req.body["Type"] != 4)) || (req.body["Type"] == 2)) {
-			msg = req.body["Message"];
-			if (req.body["Type"] == 2)
-				msg = cuser["FirstName"]+" sent you contact details";
-			//immediate email notification
-			return notif.SendEmailNotification(ruser, 0, notif.emailTypes["TypeEmailMessageReceived"], cuser["FirstName"], cuser["ImageURL"], msg, cuser["ID"] )
-			.then(function() { return copytext("./copytext.csv"); } )
-			.then(function(textvalues) {
-				//immediate push notification
-				return notif.SendPushNotification(ruser, 0,
-					textvalues.get("PushMessageReceivedCopy1")+" "+cuser["FirstName"]+" "+textvalues.get("PushMessageReceivedCopy2"),
-					msgres["MessageID"], notif.pushTypes["MessageReceived"]  );
-			})
-			.then(function() {
-				// cancel reminder notification
-				notif.UpdateExpiringMatchNotification(matchid, cuser["ID"], 0);
-			})
-		}
-	})
 	.then(function() {
+		return msglib.SendMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"]);
+	})
+	.then(function(msgres) {
 		msgres["Status"] = {"Status" : "1", "StatusMessage" : "" };
 		res.json({"SendMessageResult" : msgres });
 	})
