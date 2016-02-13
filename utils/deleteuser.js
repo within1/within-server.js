@@ -7,6 +7,8 @@ function deleteUser(uid) {
 	var cuser = null;
 	models.Users.findOne({where : {ID : uid}, raw : true})
 	.then(function(c) {
+		if (c == null)
+			throw "User id "+uid+" not found";
 		cuser = c;
 		models.Users.update({"IncompleteOnboardingNotificationID" : null, "IncompleteOnboardingEmailNotificationID" : null, "InactivityEmailNotificationID" : null}, {where : {ID : uid} })
 		return true;
@@ -40,5 +42,5 @@ function deleteUser(uid) {
 
 if (!module.parent) {
 	console.log("Removing user")
-	deleteUser(98);
+	deleteUser(140);
 }
