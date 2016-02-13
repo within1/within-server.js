@@ -60,9 +60,9 @@ config  = {
 		}
 	},
 	apn : {
-		local : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
-		development : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
-		live : { pfx : "../PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
+		local : { pfx : __dirname+"/PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
+		development : { pfx : __dirname + "/PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
+		live : { pfx : __dirname + "/PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
 	}
 };
 
