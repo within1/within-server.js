@@ -1,6 +1,8 @@
 // CheckForUserFromFacebookID API tests
 
-var test = require("./tests.js");
+var test = require("../tests.js");
+
+var randnum = Math.floor(Math.random() * 1000000);
 
 test("CheckForUserFromFacebookID", [
 {
@@ -8,12 +10,15 @@ test("CheckForUserFromFacebookID", [
     url: "CheckForUserFromFacebookID",
     postdata :
     {
-    "DeviceToken": "simulator",
+    "DeviceToken": "simulator"+randnum,
     "FacebookID": "990952180947706"
 	},
 
     expect: {
-
+    	"CheckForUserFromFacebookIDResult" : {
+    		"PrivateUserInformation" : {
+    			"DeviceToken" : "simulator"+randnum
+    		}
+    	}
     }
 }]);
-

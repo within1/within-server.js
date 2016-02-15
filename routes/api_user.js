@@ -15,37 +15,40 @@ var notif = require("../lib/notifications.js");
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
 
-
+// tests if the user from given facebook id exists;
+// overwrites devicetoken if so, and returns the full public & private user info
 router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 	var usermodel = null;
 	apilib.requireParameters(req, ["FacebookID", "DeviceToken"])
 	.then(function() {
-		return models.Users.findAll({where : { FacebookID : req.body["FacebookID"] }})
+		return models.Users.findOne({where : { FacebookID : req.body["FacebookID"] }})
 	})
-	.then(function(userdata) {
-		if (userdata.length == 0) {
-			var resmsg = apilib.formatAPICall({"IsExistingUser" : false});
-			resmsg["Status"] = { "Status": "1", "StatusMessage": "" };
-			return res.json({"CheckForUserFromFacebookIDResult" : resmsg} );
-		}
-		usermodel = userdata[0];
+	.then(function(usermodel) {
+		if (usermodel == null)
+			return false;
 		console.log("Userinfo: ",usermodel);
-
 		// user exists, reset devicetoken, and set DateLastActivity
-		usermodel["DeviceToken"] = req.body["DeviceToken"];
-		usermodel["DateLastActivity"] = new Date().toISOString();
-		return;
+		return models.Users.update({"DeviceToken" : req.body["DeviceToken"], "DateLastActivity" : dateFormat(new Date(), "isoUtcDateTime") }, {where : {ID : usermodel["ID"] } })
+		.then(function() { return userlib.getPublicUserInfo(usermodel["ID"], true); })
 	})
-	.then(function() { return userlib.getPublicUserInfo(usermodel["ID"], true); })
 	.then(function(userinfo) {
-		userinfo["IsExistingUser"] = "true";
-		userinfo["ResultStatus"] = {"Status" : "1", "StatusMessage" : "" };
-		res.json({"CheckForUserFromFacebookIDResult" : userinfo });
-	}).catch(function(e) {
+		var resmsg = {};
+		if (userinfo === false) {
+			resmsg = apilib.formatAPICall({"IsExistingUser" : false});
+			resmsg["Status"] = { "Status": "1", "StatusMessage": "" };
+		} else {
+			userinfo["IsExistingUser"] = "true";
+			userinfo["ResultStatus"] = {"Status" : "1", "StatusMessage" : "" };
+			resmsg = userinfo;
+		}
+		return res.json({"CheckForUserFromFacebookIDResult" : resmsg });
+	})
+	.catch(function(e) {
 		console.error(e.toString() );
 		res.json({"CheckForUserFromFacebookIDResult" : {"ResultStatus" : {"Status" : "0", "StatusMessage" : e.toString() }}});
 	});
-});
+})
+
 
 var findUserFromRequestBody = function(req) {
 	if (( (req.body["FacebookID"] === undefined) || (req.body["FacebookID"] == "")) &&
