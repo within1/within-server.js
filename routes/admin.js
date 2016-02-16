@@ -13,7 +13,11 @@ var adminlib = require("../lib/adminlib.js");
 var dateFormat = require('dateformat');
 var rp = require("request-promise");
 var notif = require("../lib/notifications.js");
+var msglib =  require("../lib/messages.js");
+var bodyParser = require('body-parser');
 
+
+router.use(bodyParser.urlencoded({ extended: false }));
 
 // add basic authentication for modules listed from here:
 router.use("/admin/", function(req, res, next) {
@@ -463,5 +467,28 @@ router.get('/admin/apicalls/', function(req, res) {
 		res.send(framed);
 	});
 });
+
+// Send message as team within
+router.get("/admin/user/:userid/sendasteam", function(req, res) {
+	var err = "";
+	var output = Mustache.render(fs.readFileSync("./routes/admin_sendasteam.html", "utf8"), {"err" : err } );
+	var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+	res.send(framed);
+});
+
+router.post("/admin/user/:userid/sendasteam", function(req, res) {
+	var msg = req.body["msg"];
+	// find within user
+
+	return models.Users.findOne({where : { IsTeamWithin : true} })
+	.then(function(tu) {
+		return msglib.SendMessage(tu["ID"], req.params["userid"], msg, 1)
+	})
+	.then(function(r) {
+		res.redirect("/admin/user/"+req.params["userid"]+"/sendasteam");
+	})
+
+});
+
 
 module.exports = router;

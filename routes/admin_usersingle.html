@@ -9,7 +9,8 @@
 <hr size="1" />
 <br />
 <a href="/admin/match/{{user.ID}}">Look up possible matches...</a>&nbsp;&nbsp;&nbsp;&nbsp;
-{{#approvable}}<form style="display:inline" action="/admin/user/{{user.ID}}/approve" method="post"><button type="submit">Approve user</button></form>{{/approvable}}
+{{#approvable}}<form style="display:inline" action="/admin/user/{{user.ID}}/approve" method="post"><button type="submit">Approve user</button></form>{{/approvable}}<br />
+<a href="/admin/user/{{user.ID}}/sendasteam">Send message as Team Within...</a>&nbsp;&nbsp;&nbsp;&nbsp;
 <h3>Education:</h3>
 {{#user.UserEducations}}
 [{{StartYear}} - {{EndYear}}]  School: {{School.Name}}  Degree: {{Degree}}  Major: {{Major}} <br />
