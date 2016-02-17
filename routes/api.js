@@ -172,7 +172,7 @@ router.post("/api/AddUserThankYou", function(req, res) {
 		// send notifications
 		if (trgUser["DeviceToken"] != null) {
 			return copytext("./copytext.csv")
-			.then(function(textvalues) { return notif.SendPushNotification(trgUser, 0, cuser["FirstName"]+textvalues.get("PushThanxReceivedCopy"), "", notif.pushTypes["ThanxReceived"] );  })
+			.then(function(textvalues) { return notif.SendPushNotification(trgUser, 0, cuser["FirstName"]+textvalues.get("PushThanxReceivedCopy"), "", cuser["ID"], notif.pushTypes["ThanxReceived"] );  })
 			.then(function() {
 				return notif.SendEmailNotification(trgUser, 0, notif.emailTypes["TypeEmailThanxReceived"], cuser["FirstName"], cuser["ImageURL"], comment, cuser["ID"] );
 			})

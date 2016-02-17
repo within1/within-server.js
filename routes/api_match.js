@@ -72,7 +72,7 @@ function createNewMatch(cuser) {
 			})
 			.then(function() { return copytext("./copytext.csv"); })
 			.then(function(textvalues) {
-				return notif.SendPushNotification(cuser, hrsLeft, textvalues.get("PushNewMatchAvailableCopy"), "", notif.pushTypes["NewMatchAvailable"]);
+				return notif.SendPushNotification(cuser, hrsLeft, textvalues.get("PushNewMatchAvailableCopy"), "", cuser["ID"], notif.pushTypes["NewMatchAvailable"]);
 			})
 			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
 			.then(function(newmsg) { return newmatch; } );
