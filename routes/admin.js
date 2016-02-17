@@ -490,5 +490,25 @@ router.post("/admin/user/:userid/sendasteam", function(req, res) {
 
 });
 
+// Send message as team within
+router.use("/admin/user/:userid/addmatch", function(req, res) {
+	var sendresponse = function(err) {
+		var err = "";
+		var output = Mustache.render(fs.readFileSync("./routes/admin_addmatch.html", "utf8"), {"err" : err } );
+		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
+		res.send(framed);
+	}
+	if (req.body["user_id"] === undefined) {
+		return sendresponse("");
+	} else {
+		return models.Users.findOne({where : { ID : req.body["user_id"] } })
+		.then(function(tu) {
+			if (tu == null)
+				throw "No such user";
+		});
+	}
+});
+
 
 module.exports = router;
+
