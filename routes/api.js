@@ -204,13 +204,13 @@ router.post("/api/DeleteThankYou", function(req, res) {
 	apilib.requireParameters(req, ["UserToken", "UserID", "RatingID"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(authuser) {
-		return models.UserRatings.update({"isDeletedByRatedUser" : 1}, {where : { $and : [ { RaterID : req.body["UserID"]} , { ID : req.body["RatingID"]} ] } } );
+		return models.UserRatings.update({"isDeletedByRatedUser" : 1}, {where : { RatedID : req.body["UserID"] , ID : req.body["RatingID"]} } );
 	})
 	.then(function(d) {
-		res.json({GetDeleteRatingResult : {"Status" : {"Status" : "1", "StatusMessage" : "" }} });
+		res.json({"DeleteThankYouResult" : {"Status" : {"Status" : "1", "StatusMessage" : "" }} });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch( apilib.errorhandler("GetDeleteRatingResult", req, res));
+	.catch( apilib.errorhandler("DeleteThankYouResult", req, res));
 });
 
 // ------------------------------------
