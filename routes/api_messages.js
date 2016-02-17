@@ -22,6 +22,7 @@ router.use(compression({ threshold: 512}));
 router.post("/api/GetMessageThread", function(req, res) {
 	var msgres = {};
 	var resmsgs = [];
+	var trgUser = null;
 	var allmsgs = null;
 	apilib.requireParameters(req, ["UserID", "UserToken", "SenderID", "MessageCount"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
@@ -30,6 +31,7 @@ router.post("/api/GetMessageThread", function(req, res) {
 		return models.Users.findOne({where: {ID : req.body["SenderID"] }});
 	})
 	.then(function(otheruserdata) {
+		trgUser = otheruserdata;
 		if (otheruserdata == null)
 			throw "User "+req.body["SenderID"]+" not found";
 		msgres["OtherUserFirstName"] = otheruserdata["FirstName"];
@@ -43,33 +45,44 @@ router.post("/api/GetMessageThread", function(req, res) {
 		});
 	})
 	.then(function(msglist) {
-		// cut topmost N messages & format them according to API
+		// cut topmost N messages & format them according to API & mark them as read
+		var flagMessageRead = function(cid) {
+			return models.Messages.update({"HasRead" : true}, {where : {ID : cid}});
+		};
+		var allops = [];
 		allmsgs = msglist;
 		for (var i = 0; ((i < req.body["MessageCount"]) && (i<msglist.length)); i++ ) {
 			var newmsg = userlib.copyValues(msglist[i], ["ID", "DateCreated", "SenderID", "ReceiverID", "Type", "HasRead"]);
 			newmsg["Message"] = msglist[i]["Message1"];
 			newmsg = apilib.formatAPICall(newmsg);
 			resmsgs.push(newmsg);
+			if (msglist[i]["HasRead"] == false)
+				allops.push(flagMessageRead(msglist[i]["ID"]));
 		}
-		//Has a "Thank You" been given by the User referenced by SenderID?
-
-		return models.UserRatings.findAll({where: {RatedID : req.body["UserID"], RaterID : req.body["SenderID"]  }});
+		// set all unread result messages as having been read
+		return Promise.all(allops);
 	})
-	.then(function(ratelist) {
-		msgres["IsAlreadyRated"] = (ratelist.length > 0)?(1):(0);
-		msgres["IsUnreadMessages"] = false;
-		var culist = [];
-		for (var i in allmsgs) {
-			if (!allmsgs[i]["HasRead"]) {
-				msgres["IsUnreadMessages"] = true;
+	.then(function() {
+		//Has a "Thank You" been given by the User referenced by SenderID?
+		return models.UserRatings.findAll({where: {RatedID : req.body["UserID"], RaterID : req.body["SenderID"]  }})
+		.then(function(ratelist) {
+			msgres["IsAlreadyRated"] = (ratelist.length > 0)?(1):(0);
+			msgres["IsUnreadMessages"] = false;
+			var culist = [];
+			for (var i in allmsgs) {
+				if (!allmsgs[i]["HasRead"]) {
+					msgres["IsUnreadMessages"] = true;
+				}
+				if (culist.indexOf(allmsgs[i]["SenderID"]) == -1)
+					culist.push(allmsgs[i]["SenderID"]);
 			}
-			if (culist.indexOf(msgres["SenderID"]))
-				culist.push(msgres["SenderID"]);
-		}
-		//Only valid for Thank you if back and forth messaging
-		msgres["IsValidForThankYou"] = (culist.length < 2)?(0):(1);
-		msgres = apilib.formatAPICall(msgres);
-		msgres["MesssageList"] = resmsgs;
+			//Only valid for Thank you if back and forth messaging
+			msgres["IsValidForThankYou"] = (culist.length < 2)?(0):(1);
+			if (trgUser["IsTeamWithin"] == 1)
+				msgres["IsValidForThankYou"] = 0;
+			msgres = apilib.formatAPICall(msgres);
+			msgres["MesssageList"] = resmsgs;
+		})
 	})
 	.then(function() {
 		msgres["Status"] = {"Status" : "1", "StatusMessage" : "" };
