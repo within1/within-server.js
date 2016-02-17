@@ -448,7 +448,7 @@ router.get('/admin/notifications/', function(req, res) {
 
 // API calls lister
 router.get('/admin/apicalls/', function(req, res) {
-	return models.RequestLogs.findAll({ order : "DateRequest desc", limit : 50 })
+	return models.RequestLogs.findAll({ order : "DateRequest desc", limit : 20 })
 	.then(function(u) {
 		AddBreaks = function(s) {
 			console.log(s);
@@ -460,6 +460,8 @@ router.get('/admin/apicalls/', function(req, res) {
 		}
 		for (var i in u) {
 			u[i]["Request"] = AddBreaks(u[i]["Request"]);
+			if (u[i]["Request"].length > 32768)
+				u[i]["Request"] = "[...]";
 			u[i]["Response"] = AddBreaks(u[i]["Response"]);
 		}
 		var output = Mustache.render(fs.readFileSync("./routes/admin_apicalls.html", "utf8"), {"calls" : u } );
