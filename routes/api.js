@@ -12,6 +12,7 @@ var dateFormat = require('dateformat');
 var notif = require("../lib/notifications.js");
 var copytext = require("../lib/copytext.js");
 var msglib =  require("../lib/messages.js");
+var match = require("../lib/match.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
@@ -232,6 +233,14 @@ router.post("/api/SubmitUserRating", function(req, res) {
 		res.json({"SubmitUserRatingResult" : {"Status" : {"Status" : "1", "StatusMessage" : "" }}  });
 	})
 	//Set Match "ReachingOutUserHasViewedFlag" to true
+	.then(function() {
+		return match.getExistingMatch(req.body["UserID"], req.body["OtherUserID"])
+		.then(function(cm) {
+			if (cm == null)
+				throw "No match exists between users while doing SubmitUserRating: "+JSON.stringify(req.body);
+			return models.Matches.update({"ReachingOutUserHasViewedFlag" : true}, {where : { ID : cm["ID"]}});
+		})
+	})
 
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
 	.catch( apilib.errorhandler("SubmitUserRatingResult", req, res));
