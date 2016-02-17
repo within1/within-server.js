@@ -54,7 +54,7 @@ router.post("/api/GetMessageThread", function(req, res) {
 		for (var i = 0; ((i < req.body["MessageCount"]) && (i<msglist.length)); i++ ) {
 			var newmsg = userlib.copyValues(msglist[i], ["ID", "DateCreated", "SenderID", "ReceiverID", "Type", "HasRead"]);
 			newmsg["Message"] = msglist[i]["Message1"];
-			newmsg = apilib.formatAPICall(newmsg);
+			newmsg = apilib.formatAPICall(newmsg, ["DateCreated"]);
 			resmsgs.push(newmsg);
 			if (msglist[i]["HasRead"] == false)
 				allops.push(flagMessageRead(msglist[i]["ID"]));
