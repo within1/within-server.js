@@ -172,20 +172,17 @@ function GetMatchesProcessPerUser(req, res) {
 			return new Date(m["MatchDate"]).getTime();
 		};
 		matchresults.sort(function(a,b) {
-			var ta = getSortDate(a);
-			var tb = getSortDate(b);
-			// console.log(a,b);
-			// console.log(ta,tb);
-			if (ta == tb)
-				return 0;
-			return (ta > tb)?(-1):(1);
-			/*
+			// if no message have been sent yet, set it as first
 			if (a["LatestMessage"] == null)
 				return -1;
 			if (b["LatestMessage"] == null)
 				return 1;
-			return (a["MatchID"] > b["MatchID"])?(-1):(1);
-			*/
+			// otherwise, sort by latest message
+			var ta = getSortDate(a);
+			var tb = getSortDate(b);
+			if (ta == tb)
+				return 0;
+			return (ta > tb)?(-1):(1);
 		})
 		return matchresults;
 	})
