@@ -47,16 +47,19 @@ config  = {
 			FlagEmail	: "joel@custlabs.com",
 			WaitlistEmail : "joel@custlabs.com",
 			TeamWithinMessageEmail : "joel@custlabs.com",
+			Inbound : "@devbound.within.guru",
 		},
 		development : {
 			FlagEmail	: "hello+flag@within.guru",
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",
+			Inbound : "@devbound.within.guru",
 		},
 		live : {
 			FlagEmail	: "hello+flag@within.guru",
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",
+			Inbound : "@inbound.within.guru",
 		}
 	},
 	apn : {
