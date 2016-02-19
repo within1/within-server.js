@@ -555,13 +555,13 @@ module.exports = function(sequelize) {
         "primaryKey": false
     },
     "UserID": {
-        "type": "NVARCHAR",
+        "type": "INT",
         "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
     },
     "MessageID": {
-        "type": "NVARCHAR",
+        "type": "INT",
         "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
@@ -626,8 +626,20 @@ module.exports = function(sequelize) {
         "defaultValue": null,
         "primaryKey": false
     },
+    "OtherUserID": {
+        "type": "INT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
     "Type": {
         "type": "TINYINT",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "ReplyCode": {
+        "type": "NVARCHAR",
         "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
