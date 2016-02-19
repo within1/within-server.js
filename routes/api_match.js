@@ -164,15 +164,28 @@ function GetMatchesProcessPerUser(req, res) {
 			})
 		})
 	})
-	// sort resulting array
+	// sort resulting array by: last message date, or Match date if no message have been sent yet
 	.then(function(matchresults) {
-		// Match with no messages come first in response list
+		function getSortDate(m) {
+			if ((m["LatestMessage"] !== undefined) && (m["LatestMessage"] != null) && (m["LatestMessage"]["DateCreated"] !== undefined) )
+				return new Date(m["LatestMessage"]["DateCreated"]).getTime();
+			return new Date(m["MatchDate"]).getTime();
+		};
 		matchresults.sort(function(a,b) {
+			var ta = getSortDate(a);
+			var tb = getSortDate(b);
+			// console.log(a,b);
+			// console.log(ta,tb);
+			if (ta == tb)
+				return 0;
+			return (ta > tb)?(-1):(1);
+			/*
 			if (a["LatestMessage"] == null)
 				return -1;
 			if (b["LatestMessage"] == null)
 				return 1;
 			return (a["MatchID"] > b["MatchID"])?(-1):(1);
+			*/
 		})
 		return matchresults;
 	})
