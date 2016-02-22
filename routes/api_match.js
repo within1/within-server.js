@@ -101,7 +101,7 @@ function GetMatchesProcessPerUser(req, res) {
 		// find all previous non-dead matches:
 		return Promise.all([
 			models.Matches.findAll({where : {"IsDead" : 0, "OtherUserHasDeletedFlag" : 0, "ReachingOutUserHasDeletedFlag" : 0, "ReachingOutUserID" : cuser["ID"] } }),
-			models.Matches.findAll({where : {"IsDead" : 0, "OtherUserHasDeletedFlag" : 0, "ReachingOutUserHasDeletedFlag" : 0, "OtherUserID" : cuser["ID"] } })
+			models.Matches.findAll({where : {"IsDead" : 0, "OtherUserHasDeletedFlag" : 0, "ReachingOutUserHasDeletedFlag" : 0, "OtherUserID" : cuser["ID"], "NewestMessageID" : { $ne : null } } })
 		]);
 	})
 	.then(function(matches) {
