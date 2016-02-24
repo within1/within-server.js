@@ -92,6 +92,7 @@ function createNewMatch(cuser) {
 function GetMatchesProcessPerUser(req, res) {
 	var cuser = null;
 	var allmatches = [];
+	var newestMatch = null;
 	return apilib.requireParameters(req, ["UserToken", "UserID"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function(authuser) {
@@ -111,7 +112,7 @@ function GetMatchesProcessPerUser(req, res) {
 		// check if we need to generate new matches
 		var isnewestexpired = false;
 		if (allmatches.length > 0) {
-			var newestMatch = allmatches[0];
+			newestMatch = allmatches[0];
 			for (var i in allmatches) {
 				if ((allmatches[i]["ReachingOutUserID"] == cuser["ID"]) && (allmatches[i]["MatchDate"] > newestMatch["MatchDate"] ))
 					newestMatch = allmatches[i];
@@ -127,6 +128,7 @@ function GetMatchesProcessPerUser(req, res) {
 					return true;
 				// add as first element
 				allmatches.unshift(newMatch);
+				newestMatch = newMatch;
 				return true;
 			});
 		}
@@ -218,9 +220,9 @@ function GetMatchesProcessPerUser(req, res) {
 		//if a message exists in a conversation, no longer can be preferred
 		if ((matchresults.length > 0) && (matchresults[0]["LatestMessage"] == null))
 			matchresults[0]["IsPreferredMatch"] = "true";
-		var nextMatchDate = null;
-		if (matchresults.length > 0)
-			nextMatchDate = matchresults[0]["MatchExpireTime"];
+		var nextMatchDate = "";
+		if (newestMatch != null)
+			nextMatchDate = dateFormat(newestMatch["MatchExpireDate"], "mm/dd/yyyy HH:MM:ss", true);
 		var msgres = {"Matches" : matchresults, "NextMatchDate" : nextMatchDate, "Status" : {"Status" : "1", "StatusMessage" : "" } };
 		return res.json({"GetMatchesForUserResult" : msgres });
 	})
