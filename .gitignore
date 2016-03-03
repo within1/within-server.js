@@ -2,3 +2,4 @@ iisnode.yml
 iisnode/*
 node_modules/
 aspnet_client/
+.well-known/acme-challenge/
