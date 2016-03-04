@@ -8,7 +8,7 @@ function getFacebookFriends(cuser, cb) {
 	var reslist = [];
 	var cpage = 0;
 	var webget = function(url) {
-		console.log(url);
+		// console.log(url);
 		request(url, function(err,res,body) {
 			if ((err != null) || (res.statusCode != 200)) {
 				console.error("facebook request statuscode "+res.statusCode+", error: "+err+" pulling "+url);
@@ -37,7 +37,7 @@ models.Users.findAll({where : { ID : { $gt : 4181}, FacebookAccessToken : { $ne 
 				if (cu.length == 0)
 					return true;
 				var callpr = [];
-				console.log(cu);
+				// console.log(cu);
 				for (var i in cu) {
 					callpr.push(function(cfbid) {
 						var otheruser = null;

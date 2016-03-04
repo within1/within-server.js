@@ -24,7 +24,9 @@ config  = {
 			port: '1433',
 	        host: 'within.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
 	        database: 'Within',
-	        dialect : "mssql"
+	        dialect : "mssql",
+	        logging: false
+
 	    }
 	},
 	admin : {
