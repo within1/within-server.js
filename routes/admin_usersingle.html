@@ -59,3 +59,20 @@
 	</tbody>
 </table>
 <br />
+<h3>User Activity:</h3>
+<br />
+<table cellspacing="1" class="tablesorter" style="min-width:660px;">
+<thead>
+	<tr><th>Date</th><th>Activity</th></tr>
+</thead>
+<tbody id="userlisting">
+	{{#activities}}
+<tr>
+	<td style="width:180px">{{{crdate}}}</td>
+	<td>{{{URL}}}</td>
+</tr>
+	{{/activities}}
+</tbody>
+</table>
+
+

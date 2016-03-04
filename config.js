@@ -8,7 +8,8 @@ config  = {
 			port: '1433',
 	        host: 'devdb1.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
 	        database: 'WithinDevelopment',
-	        dialect : "mssql"
+	        dialect : "mssql",
+	        logging: false
 	    },
 		development : {
 			user : "CaptainBlackout",
@@ -16,7 +17,8 @@ config  = {
 			port: '1433',
 	        host: 'devdb1.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
 	        database: 'WithinDevelopment',
-	        dialect : "mssql"
+	        dialect : "mssql",
+	        logging: false
 	    },
 	    live: {
 			user : "within",
@@ -26,7 +28,6 @@ config  = {
 	        database: 'Within',
 	        dialect : "mssql",
 	        logging: false
-
 	    }
 	},
 	admin : {

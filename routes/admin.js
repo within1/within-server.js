@@ -151,6 +151,9 @@ outer apply (select count(id) as msgcnt from Messages where  \
   (SenderID  = m.ReachingOutUserID and ReceiverID = m.OtherUserID ) \
  ) as msg \
 where m.OtherUserID = ?", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT} ).then(function(res) { cb(null,res ); });
+		},
+		"activities" : function(cb) {
+			return models.sequelize.query("SELECT URL, FORMAT(DateRequest, 'MM-dd-yyyy HH\\:mm\\:ss') as crdate FROM RequestLogs where UserID = ? order by id asc", { replacements: [req.params.userid], type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		}
 	}, function(err, resdata) {
 		data = resdata["user"];
@@ -492,7 +495,7 @@ router.post("/admin/user/:userid/sendasteam", function(req, res) {
 
 });
 
-// Send message as team within
+// Add a new match to user
 router.use("/admin/user/:userid/addmatch", function(req, res) {
 	var sendresponse = function(err) {
 		var err = "";

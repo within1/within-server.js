@@ -29,7 +29,11 @@ function routeProxy(funcname, postdata, cb) {
 		if (error != null)
 			console.error(error);
 		console.log("response from "+url+" ("+res.statusCode+")");
-		models.RequestLogs.create({"Request" : JSON.stringify(postdata), "Response" : JSON.stringify(body), "URL" : funcname, "StatusCode" : res.statusCode, "UserID" : (postdata["UserID"] !== undefined)?(postdata["UserID"]):(null),
+		var cuid = (postdata["UserID"] !== undefined)?(postdata["UserID"]):(null);
+		if ((cuid == null) && (funcname == "AddEditFacebookUser") && (body["AddEditFacebookUserResult"] !== undefined) &&
+				(body["AddEditFacebookUserResult"]["PublicUserInformation"]["ID"] !== undefined))
+			cuid = body["AddEditFacebookUserResult"]["PublicUserInformation"]["ID"];
+		models.RequestLogs.create({"Request" : JSON.stringify(postdata), "Response" : JSON.stringify(body), "URL" : funcname, "StatusCode" : res.statusCode, "UserID" : cuid,
 			"DateRequest" : dateFormat(new Date(), "isoUtcDateTime") })
 		.then(function() {
 			cb(null, body);
