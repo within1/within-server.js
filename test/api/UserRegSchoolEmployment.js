@@ -60,6 +60,9 @@ test("User reg, verify combo", [
 },
     expect: {
     	"AddEditFacebookUserResult": {
+    		"PrivateUserInformation" : {
+    			"FacebookAccessToken": "tester"
+    		},
     		"PublicUserInformation" : {
     			"GetUserEducation" : [
     				{
