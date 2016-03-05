@@ -2,6 +2,18 @@
 
 config  = {
 	sql : {
+	    local: {
+			user : "within",
+			password : "Siy763zz=oN",
+			port: '1433',
+	        host: 'within.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
+	        database: 'Within',
+	        dialect : "mssql",
+	        logging: true
+	    },
+
+
+		/*
 		local : {
 			user : "CaptainBlackout",
 			password : "A$3gwk19+gV?85zz",
@@ -11,6 +23,7 @@ config  = {
 	        dialect : "mssql",
 	        logging: false
 	    },
+	    */
 		development : {
 			user : "CaptainBlackout",
 			password : "A$3gwk19+gV?85zz",
