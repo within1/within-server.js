@@ -15,7 +15,7 @@ var rp = require("request-promise");
 var notif = require("../lib/notifications.js");
 var msglib =  require("../lib/messages.js");
 var bodyParser = require('body-parser');
-
+var daemon = require("../lib/daemon.js");
 
 router.use(bodyParser.urlencoded({ extended: false }));
 
@@ -408,7 +408,15 @@ router.post("/admin/user/:userid/approve", function(req, res) {
 
 router.post("/admin/user/:userid/expirelatest", function(req, res) {
 	var cuser = null;
-	return models.Users.findOne({where : { ID : req.params["userid"]}})
+	var notifids = [];
+	// find notifications -to be flagged to send immediately
+	return models.Notifications.findAll({where : {
+				"SourceTable" : "NewMatchAvailable", UserID : req.params["userid"], "HasSent" : 0}, raw: true})
+	.then(function(cnid) {
+		for (var i in cnid)
+			notifids.push(cnid[i]["ID"]);
+		return models.Users.findOne({where : { ID : req.params["userid"]}})
+	})
 	.then(function(u) {
 		cuser = u;
 		return models.Matches.findAll( { where : { ReachingOutUserID : req.params["userid"] }, order : "ID desc", limit : 1})
@@ -420,6 +428,11 @@ router.post("/admin/user/:userid/expirelatest", function(req, res) {
 	})
 	.then(function(r) {
 		return rp({uri : "http://"+req.headers.host+"/api/GetMatchesForUser", method: "POST", json : { "UserID" : cuser["ID"], "UserToken" : cuser["Token"] }})
+	})
+	.then(function(js) {
+		// set notifications to be sent immediately
+		return models.Notifications.update({"DateTarget" :  dateFormat( new Date(), "isoUtcDateTime"), "HasSent" : 0 }, {where : { ID : notifids }})
+		.then(function(cupd) { return daemon.notifRefill(); })
 	})
 	.then(function(js) {
 		// return res.send(js);
