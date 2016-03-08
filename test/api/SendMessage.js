@@ -22,7 +22,7 @@ test("SendMessage", [
 	    postdata :
 	{
 	    "Type": "1",
-	    "Message": "Hello world!",
+	    "Message": "Hello world! 123132",
 	    "ReceiverID": otheruser["ID"],
 		"UserID" : persona["UserID"],
 		"UserToken" : persona["UserToken"],

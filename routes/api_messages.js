@@ -96,12 +96,22 @@ router.post("/api/GetMessageThread", function(req, res) {
 });
 
 // -----------------------------------------------------
-// Send message to another user
-router.post("/api/SendMessage", function(req, res) {
-	apilib.requireParameters(req, ["UserID", "UserToken", "ReceiverID", "Message", "Type"])
+// Send message to another user; one at a time using queues
+router.post("/api/SendMessage", apilib.queue("SendMessage", function(req, res) {
+	return apilib.requireParameters(req, ["UserID", "UserToken", "ReceiverID", "Message", "Type"])
 	.then(function() { return userlib.validateToken(req.body["UserID"], req.body["UserToken"]); })
 	.then(function() {
-		return msglib.SendMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"]);
+
+		// check if previous message matches with this one, and silently swallow it if it does
+		// this is to work around iOS client double-sending messages on first window
+		return models.Messages.findOne( { where : { SenderID : req.body["UserID"], ReceiverID :  req.body["ReceiverID"], Type : 1 }, order : "id desc" })
+		.then(function(msg) {
+			if (msg["Message1"] == req.body["Message"]) {
+				return {"MessageID" : msg["ID"]};
+			} else {
+				return msglib.SendMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"]);
+			}
+		})
 	})
 	.then(function(msgres) {
 		msgres["Status"] = {"Status" : "1", "StatusMessage" : "" };
@@ -113,7 +123,7 @@ router.post("/api/SendMessage", function(req, res) {
 		console.error(e.stack);
 		res.json({"SendMessageResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
 	});
-});
+}));
 
 // Returns the details of the Message that the MessageID references
 // Used as a Push Notification callback
