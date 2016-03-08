@@ -104,9 +104,12 @@ router.post("/api/SendMessage", apilib.queue("SendMessage", function(req, res) {
 
 		// check if previous message matches with this one, and silently swallow it if it does
 		// this is to work around iOS client double-sending messages on first window
-		return models.Messages.findOne( { where : { SenderID : req.body["UserID"], ReceiverID :  req.body["ReceiverID"], Type : 1 }, order : "id desc" })
+		return models.Messages.findOne( { where : { $or :
+			 [ { SenderID : req.body["UserID"], ReceiverID :  req.body["ReceiverID"] },
+			   { ReceiverID : req.body["UserID"], SenderID :  req.body["ReceiverID"] } ]
+			 , Type : 1 }, order : "id desc" })
 		.then(function(msg) {
-			if (msg["Message1"] == req.body["Message"]) {
+			if  ( (msg["SenderID"] == req.body["UserID"] ) && (msg["Message1"] == req.body["Message"]) ) {
 				return {"MessageID" : msg["ID"]};
 			} else {
 				return msglib.SendMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"]);
