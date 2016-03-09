@@ -231,7 +231,6 @@ router.get("/admin/stats/*", function(req,res) {
 	}
 	if (cd.length > 2)
 		byday = cd[2];
-
 	var data = [];
 	var alldatasources = {
 		"# of users logged in" : function(cb) {
@@ -242,8 +241,12 @@ router.get("/admin/stats/*", function(req,res) {
 			models.sequelize.query("select count(distinct ID) as cnum, cdate from (select ID, Datediff(day, ?, DateCreated ) as cdate from users where DateCreated > ? and DateCreated < ?) as t group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
+		"Made it to waitlist" : function(cb) {
+			models.sequelize.query("select count(distinct ID) as cnum, cdate from ( select ID, Datediff(day, ?, DateCreated) as cdate from users where AppStatus >= 1 and  DateAppStatusModified > ? and DateAppStatusModified < ?) as t group by cdate",
+				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+		},
 		"Profile approved" : function(cb) {
-			models.sequelize.query("select count(distinct ID) as cnum, cdate from ( select ID, Datediff(day, ?, DateCreated) as cdate from users where AppStatus > 0 and  DateAppStatusModified > ? and DateAppStatusModified < ?) as t group by cdate",
+			models.sequelize.query("select count(distinct ID) as cnum, cdate from ( select ID, Datediff(day, ?, DateCreated) as cdate from users where AppStatus > 1 and  DateAppStatusModified > ? and DateAppStatusModified < ?) as t group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
 		"Received recommendation" : function(cb) {
@@ -314,7 +317,7 @@ group by cdate",
 			"Reached out rate = Reach out / Received recommendation" : ["Reached out", "Received recommendation"],
 			"Response rate = Responded / Reach out" : ["Conversation (responded)", "Reached out"],
 			"Avg Conversation per recommendation" : ["Conversation (responded)", "Received recommendation"],
-			"Avg number of contact cards shared per user: Conversation / cards shared" : ["Conversation (responded)", "Number of contact cards shared"]
+			"Avg number of contact cards shared per user: Cards shared / Conversation" : ["Number of contact cards shared", "Conversation (responded)"]
 		};
 		for (var i in calcvals) {
 			console.log(i);
