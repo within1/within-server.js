@@ -109,7 +109,7 @@ router.post("/api/SendMessage", apilib.queue("SendMessage", function(req, res) {
 			   { ReceiverID : req.body["UserID"], SenderID :  req.body["ReceiverID"] } ]
 			 , Type : 1 }, order : "id desc" })
 		.then(function(msg) {
-			if  ( (msg["SenderID"] == req.body["UserID"] ) && (msg["Message1"] == req.body["Message"]) ) {
+			if  ((msg != null) && (msg["SenderID"] == req.body["UserID"] ) && (msg["Message1"] == req.body["Message"]) ) {
 				return {"MessageID" : msg["ID"]};
 			} else {
 				return msglib.SendMessage(req.body["UserID"], req.body["ReceiverID"], req.body["Message"], req.body["Type"]);
