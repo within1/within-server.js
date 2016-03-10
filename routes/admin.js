@@ -254,26 +254,39 @@ router.get("/admin/stats/*", function(req,res) {
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
 		},
 		"Reached out" : function(cb) {
-			models.sequelize.query("select count(distinct firstContactID) as cnum, cdate from (\
+			// ...except for TeamWithin automatic reachout message
+			return models.Users.findAll({where : { IsTeamWithin : true}, raw: true })
+			.then(function(tws) {
+				var twids = [];
+				for (var i = 0; i < tws.length; i++)
+					twids.push(tws[i]["ID"]);
+				return models.sequelize.query("select count(distinct firstContactID) as cnum, cdate from (\
  select SenderID, ReceiverID, min(ID) as firstContactID, min(DateCreated) as firstcontact, Datediff(day, ?, min(DateCreated)) as cdate \
  from Messages group by SenderID, ReceiverID)\
  as t1 left JOIN (\
  select SenderID as bSenderID, ReceiverID as bReceiverID, min(ID) as contactbackID, min(DateCreated) as contactback from Messages \
  group by SenderID, ReceiverID\
  ) as t2 on (t1.SenderID = t2.bReceiverID and t1.ReceiverID = t2.bSenderID) \
- where ( (firstcontact >  ?) and (firstcontact < ?) and (contactback is null OR firstcontact < contactback))   group by cdate  ",
+ where ( (firstcontact >  ?) and (firstcontact < ?) and (contactback is null OR firstcontact < contactback) and (SenderID not in ("+twids.join(", ")+")))   group by cdate  ",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+			})
 		},
 		"Conversation (responded)" : function(cb) {
-			models.sequelize.query("select count(distinct contactbackID) as cnum, cdate from  ( \
+			return models.Users.findAll({where : { IsTeamWithin : true}, raw: true })
+			.then(function(tws) {
+				var twids = [];
+				for (var i = 0; i < tws.length; i++)
+					twids.push(tws[i]["ID"]);
+				return models.sequelize.query("select count(distinct contactbackID) as cnum, cdate from  ( \
 select SenderID, ReceiverID, min(ID) as firstContactID, min(DateCreated) as firstcontact \
 from Messages group by SenderID, ReceiverID) as t1  \
 left JOIN  \
 (select SenderID as bSenderID, ReceiverID as bReceiverID, min(ID) as contactbackID, min(DateCreated) as contactback, Datediff(day, ?, min(DateCreated) ) as cdate from Messages group by SenderID, ReceiverID) as t2  \
 on (t1.SenderID = t2.bReceiverID and t1.ReceiverID = t2.bSenderID)  \
-where ( (firstcontact > ?) and (firstcontact < ?) and (contactback is null OR firstcontact < contactback)) \
+where ( (firstcontact > ?) and (firstcontact < ?) and (contactback is null OR firstcontact < contactback)  and (SenderID not in ("+twids.join(", ")+")) ) \
 group by cdate",
 				{ replacements: cparams, type: models.sequelize.QueryTypes.SELECT}).then(function(res) { cb(null, res); });
+			});
 		},
 		"Number of contact cards shared" : function(cb) {
 			models.sequelize.query("select count(distinct interact) as cnum, cdate from \

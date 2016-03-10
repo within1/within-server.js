@@ -21,7 +21,6 @@ config  = {
 	        database: 'WithinDevelopment',
 	        dialect : "mssql"
 	    },
-
 		development : {
 			user : "CaptainBlackout",
 			password : "A$3gwk19+gV?85zz",
@@ -58,18 +57,21 @@ config  = {
 	mandrill : "-9yaWsYS5OWZ5V-j9LCz8w",
 	emails : {
 		local : {
+			devMail		: "joel@custlabs.com",
 			FlagEmail	: "joel@custlabs.com",
 			WaitlistEmail : "joel@custlabs.com",
 			TeamWithinMessageEmail : "joel@custlabs.com",
 			Inbound : "@devbound.within.guru",
 		},
 		development : {
+			devMail		: "joel@custlabs.com",
 			FlagEmail	: "hello+flag@within.guru",
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",
 			Inbound : "@devbound.within.guru",
 		},
 		live : {
+			devMail		: "joel@custlabs.com",
 			FlagEmail	: "hello+flag@within.guru",
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",

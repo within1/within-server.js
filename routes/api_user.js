@@ -43,10 +43,7 @@ router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 		}
 		return res.json({"CheckForUserFromFacebookIDResult" : resmsg });
 	})
-	.catch(function(e) {
-		console.error(e.toString() );
-		res.json({"CheckForUserFromFacebookIDResult" : {"ResultStatus" : {"Status" : "0", "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("CheckForUserFromFacebookIDResult", req, res));
 })
 
 
@@ -91,11 +88,7 @@ router.post('/api/AddEditFacebookUser', function(req, res) {
 		res.json({"AddEditFacebookUserResult" : userinfo });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(userid);	})
-	.catch(function(e) {
-		console.error(e.toString() );
-		console.error(e.stack);
-		res.json({"AddEditFacebookUserResult" : {"Status" : {"Status" : "0", "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("AddEditFacebookUserResult", req, res));
 });
 
 
@@ -109,11 +102,7 @@ router.post('/api/GetUserInformation', function(req, res) {
 		res.json({"GetUserInformationResult" : userinfo } );
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetUserInformationResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetUserInformation", req, res));
 });
 
 router.post('/api/GetOtherUserProfileInformation', function(req, res) {
@@ -136,11 +125,7 @@ router.post('/api/GetOtherUserProfileInformation', function(req, res) {
 		 		}} );
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetOtherUserProfileInformationResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetOtherUserProfileInformationResult", req, res));
 });
 
 //  Increments by 1 the flag count of the OtherUser
@@ -179,11 +164,7 @@ router.post('/api/FlagEventOrUser', function(req, res) {
 			});
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetFlagUserResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetFlagUserResult", req, res));
 });
 
 // Removes Token, DeviceToken for the calling User
@@ -204,12 +185,7 @@ router.post('/api/LogoutUser', function(req, res) {
 			});
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"LogoutUserResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
-
+	.catch( apilib.errorhandler("LogoutUserResult", req, res));
 });
 
 module.exports = router;

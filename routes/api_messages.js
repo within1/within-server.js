@@ -88,11 +88,7 @@ router.post("/api/GetMessageThread", function(req, res) {
 		msgres["Status"] = {"Status" : "1", "StatusMessage" : "" };
 		res.json({"GetMessageThreadResult" : msgres });
 	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetMessageThreadResult" : {"Status" : {"Status" : "0", "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetMessageThreadResult", req, res));
 });
 
 // -----------------------------------------------------
@@ -121,12 +117,9 @@ router.post("/api/SendMessage", apilib.queue("SendMessage", function(req, res) {
 		res.json({"SendMessageResult" : msgres });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"SendMessageResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("SendMessageResult", req, res));
 }));
+
 
 // Returns the details of the Message that the MessageID references
 // Used as a Push Notification callback
@@ -158,11 +151,7 @@ router.post("/api/GetMessageDetails", function(req, res) {
 		res.json({"GetMessageDetailsResult" : cres });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetMessageDetailsResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetMessageDetailsResult", req, res));
 });
 
 /// Returns a count of all unread messages for the calling user
@@ -179,11 +168,7 @@ router.post("/api/GetTotalUnreadMessageCount", function(req, res) {
 		res.json({ "GetTotalUnreadMessageCountResult" : cres });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetMessageDetailsResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetTotalUnreadMessageCountResult", req, res));
 });
 
 // Returns a list of messages older than the Message referenced by MessageID
@@ -234,11 +219,7 @@ router.post("/api/GetPastMessages", function(req, res) {
 		} });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"GetPastMessagesResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("GetPastMessagesResult", req, res));
 });
 
 // Deletes the Match and any messages between Users
@@ -267,11 +248,7 @@ router.post("/api/DeleteChatThread", function(req, res) {
 		} });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"DeleteChatThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("DeleteChatThreadResult", req, res));
 });
 
 
@@ -297,11 +274,7 @@ router.post("/api/RemoveMatchAndChatThread", function(req, res) {
 		} });
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch(function(e) {
-		console.error(e);
-		console.error(e.stack);
-		res.json({"RemoveMatchAndChatThreadResult" : {"Status" : {"Status" : 0, "StatusMessage" : e.toString() }}});
-	});
+	.catch( apilib.errorhandler("RemoveMatchAndChatThreadResult", req, res));
 });
 
 
