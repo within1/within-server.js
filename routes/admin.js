@@ -40,8 +40,6 @@ router.get("/admin/", function(req, res) {
 // filters the user by given parameters, pulls all school/employers/etc from db
 // templates it up, and sends it back to the user
 router.get('/admin/users/*', function(req, res) {
-	console.log(req.params);
-	console.log("/admin route");
 	// process query filter
 	var cfilters = [];
 	var cparams = [];
@@ -230,7 +228,7 @@ router.get("/admin/stats/*", function(req,res) {
 		cparams[2] = cd[1];
 	}
 	if (cd.length > 2)
-		byday = cd[2];
+		byday = parseInt(cd[2]);
 	var data = [];
 	var alldatasources = {
 		"# of users logged in" : function(cb) {
@@ -303,6 +301,9 @@ group by cdate",
 	};
 	async.parallel(alldatasources,  function(err, data) {
 		var allkeys = Object.keys(alldatasources);
+		allkeys.splice(0,0,"From date");
+
+		// console.log(JSON.stringify(data,0,4));
 		paramtodate = function(s) {
 			var k = s.split("-");
 			return new Date(k[0],k[1]-1,k[2]);
@@ -310,6 +311,15 @@ group by cdate",
 		// total number of days between start & end date
 		var numdays = Math.floor((new Date(paramtodate(cparams[2])) - new Date(paramtodate(cparams[1]))) / (1000*60*60*24));
 		var resbuckets = {};
+
+		// add From date header
+		resbuckets["From date"] = [];
+		var ckdate = new Date(paramtodate(cparams[1]));
+		for (var i = 0; i < Math.floor(numdays/byday)+1; i++) {
+			resbuckets["From date"].push( dateFormat(ckdate, "yyyy-mm-dd")+"-");
+			ckdate.setDate(ckdate.getDate() + byday);
+		}
+
 		// bucket each dayno-counter pair
 		for (var key in data) {
 			var cseries = data[key];
@@ -333,7 +343,6 @@ group by cdate",
 			"Avg number of contact cards shared per user: Cards shared / Conversation" : ["Number of contact cards shared", "Conversation (responded)"]
 		};
 		for (var i in calcvals) {
-			console.log(i);
 			var dres = [];
 			for (var j in resbuckets[calcvals[i][0]]) {
 				if (resbuckets[calcvals[i][1]][j] == 0)
@@ -346,7 +355,7 @@ group by cdate",
 		}
 		console.log(resbuckets);
 		var resopts = [];
-		var alldayvars = [7,14,15,30,60];
+		var alldayvars = [1,7,14,15,30,60];
 		for (var i in alldayvars) {
 			resopts.push({"val" : alldayvars[i], "selected" : (alldayvars[i] == byday)?("selected"):("") });
 		}
