@@ -27,6 +27,9 @@ router.get('/', function(req, res) {
 });
 
 
+router.use("/robots.txt", express.static(__dirname + '/../static/robots.txt'));
+router.use("/sitemap.xml", express.static(__dirname + '/../static/sitemap.xml'));
+
 router.use(favicon(__dirname + '/../static/favicon.ico'));
 
 module.exports = router;

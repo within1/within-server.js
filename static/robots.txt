@@ -1,0 +1,6 @@
+User-agent: Browsershots
+Disallow:
+
+User-agent: *
+Sitemap: /sitemap.xml
+Disallow: /WithinWCF/
