@@ -106,7 +106,7 @@ router.post('/api/GetUserInformation', function(req, res) {
 		res.json({"GetUserInformationResult" : userinfo } );
 	})
 	.then(function() { return userlib.UpdateUserActivityAndNotifications(req.body["UserID"]);	})
-	.catch( apilib.errorhandler("GetUserInformation", req, res));
+	.catch( apilib.errorhandler("GetUserInformationResult", req, res));
 });
 
 router.post('/api/GetOtherUserProfileInformation', function(req, res) {
