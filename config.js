@@ -10,7 +10,6 @@ config  = {
 	        host: 'within.c7cqsrwz0mie.us-east-1.rds.amazonaws.com',
 	        database: 'Within',
 	        dialect : "mssql",
-	        logging: true
 	    },
 */
 		local : {

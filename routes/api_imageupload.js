@@ -38,6 +38,8 @@ router.post('/api/UploadPicture', function(req, res) {
 	.then(function(authuser) {
 		cauthuser = authuser;
 		var buffer = new Buffer(req.body["Base64PictureEncoding"], "base64");
+		if (buffer.length == 0)
+			throw "Image upload error, try a different image please!";
 		cuid = uuid.v1();
 		var rfn = imagedir+cuid;
 		outfn = rfn+".JPG";
@@ -68,10 +70,12 @@ router.post('/api/UploadPicture', function(req, res) {
 	.then(function() {
 		res.json({"UploadPictureResult" : {"ImageURL" : cuid+".JPG", "PictureType" : "Profile",  "Status" : { "Status": "1", "StatusMessage": "" }}});
 		return true;
-	}).catch(function(e) {
+	})
+	.catch(function(e) {
 		console.error(e.toString() );
 		console.error(e.stack );
 		res.json({"UploadPictureResult" : {"ResultStatus" : {"Status" : "0", "StatusMessage" : e.toString() }}});
+		return apilib.errornotify(req, e);
 	});
 });
 
