@@ -11,7 +11,7 @@ function getFacebookFriends(cuser, cb) {
 		// console.log(url);
 		request(url, function(err,res,body) {
 			if ((err != null) || (res.statusCode != 200)) {
-				console.error("facebook request statuscode "+res.statusCode+", error: "+err+" pulling "+url);
+				console.error("facebook request statuscode "+res.statusCode+", error: "+err+" for user "+cuser["ID"]+" pulling "+url);
 				return cb(null, [] );
 			}
 
@@ -28,7 +28,7 @@ function getFacebookFriends(cuser, cb) {
 var prfbfriends = Promise.promisify(getFacebookFriends);
 
 
-models.Users.findAll({where : { ID : { $gt : 4181}, FacebookAccessToken : { $ne : null } }, raw : true}).then(function(u) {
+models.Users.findAll({where : { FacebookAccessToken : { $ne : null } }, raw : true}).then(function(u) {
 	var allpr = [];
 	for (var cu in u) {
 		allpr.push(function(cuser) {
