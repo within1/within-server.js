@@ -37,10 +37,13 @@ router.post('/api/GetContactCardDetails', function(req, res) {
 		]});
 	})
 	.then(function(data) {
+		if (data == null) {
+			return res.json({"GetContactCardDetailsResult" : {"Status" : { "Status": "0", "StatusMessage": "User not found" }}});
+		}
 		var carddata = data.get({plain: true});
-		console.log("cdd",carddata);
+
 		if (carddata["UserContactCards"].length == 0)
-			throw "No records found!";
+			return res.json({"GetContactCardDetailsResult" : {"Status" : { "Status": "0", "StatusMessage": "No record found" }}});
 		var c = carddata["UserContactCards"][0];
 		var apires = apilib.formatAPICall(c, ["DateCreated", "DateModified"]);
 		res.json({"GetContactCardDetailsResult" : {"GetContactCardDetail" : apires, "Status" : { "Status": "1", "StatusMessage": "" }}});

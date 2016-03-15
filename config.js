@@ -2,7 +2,6 @@
 
 config  = {
 	sql : {
-/*
 	    local: {
 			user : "within",
 			password : "Siy763zz=oN",
@@ -11,7 +10,7 @@ config  = {
 	        database: 'Within',
 	        dialect : "mssql",
 	    },
-*/
+/*
 		local : {
 			user : "CaptainBlackout",
 			password : "A$3gwk19+gV?85zz",
@@ -20,6 +19,7 @@ config  = {
 	        database: 'WithinDevelopment',
 	        dialect : "mssql",
 	    },
+*/
 		development : {
 			user : "CaptainBlackout",
 			password : "A$3gwk19+gV?85zz",
