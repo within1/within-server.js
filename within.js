@@ -4,7 +4,7 @@ var compression = require('compression')
 var http = require('http');
 var models = require("./models");
 var bodyParser = require('body-parser');
-var daemon = require("./lib/daemon.js");
+var scheduledTasks = require("./lib/scheduledtasks.js");
 var env = process.env.NODE_ENV || "local";
 
 // start web server
@@ -54,6 +54,6 @@ console.log("Server started on port "+process.env.PORT);
 
 // start notification daemon
 if (env != "local") {
-  daemon.daemonStart();
+  scheduledTasks.cronStart();
   console.log("Notification daemon started");
 }

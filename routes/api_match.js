@@ -62,18 +62,12 @@ function createNewMatch(cuser) {
 		.then(function(cm) {
 			// only insert match expiration, if a new match has indeed been created
 			newmatch = cm;
-			if (cuser["DeviceToken"] == null)
-				return newmatch;
+
 			// cancel previous notifications
 			return models.Notifications.update({"HasSent" : 1}, {where : {
 				$or : [{"SourceTable" : "NewMatchAvailable" }, {"SourceTable" : "ExpiringMatch" }],
 				UserID : cuser["ID"], "HasSent" : 0
-			}
-			})
-			.then(function() { return copytext("./copytext.csv"); })
-			.then(function(textvalues) {
-				return notif.SendPushNotification(cuser, hrsLeft, textvalues.get("PushNewMatchAvailableCopy"), "", cuser["ID"], notif.pushTypes["NewMatchAvailable"]);
-			})
+			} })
 			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
 			.then(function(newmsg) { return newmatch; } );
 		})
