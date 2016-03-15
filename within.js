@@ -37,8 +37,8 @@ fs
 
 // default post handler
 app.use(function(req, res, next) {
-  console.error("No API defined for: "+req.url);
-  res.status(404).send("No API defined for: "+req.url);
+  console.error("404 not found "+req.url);
+  res.status(404).send("Page not found");
 });
 
 // start web server
