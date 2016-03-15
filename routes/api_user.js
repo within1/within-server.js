@@ -19,7 +19,7 @@ router.use(compression({ threshold: 512}));
 // overwrites devicetoken if so, and returns the full public & private user info
 router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 	var usermodel = null;
-	apilib.requireParameters(req, ["FacebookID", "DeviceToken"])
+	apilib.requireParameters(req, ["FacebookID", "DeviceToken", "FacebookAccessToken"])
 	.then(function() {
 		return models.Users.findOne({where : { FacebookID : req.body["FacebookID"] }})
 	})
@@ -28,7 +28,11 @@ router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 			return false;
 		console.log("Userinfo: ",usermodel);
 		// user exists, reset devicetoken, and set DateLastActivity
-		return models.Users.update({"DeviceToken" : req.body["DeviceToken"], "DateLastActivity" : dateFormat(new Date(), "isoUtcDateTime") }, {where : {ID : usermodel["ID"] } })
+		var upd = {"DeviceToken" : req.body["DeviceToken"], "DateLastActivity" : dateFormat(new Date(), "isoUtcDateTime") };
+		// generate new token, if previous one was expired
+		if ((usermodel["Token"] == null) || (usermodel["Token"] == ""))
+			upd["Token"] = Math.random().toString(36).substring(2);
+		return models.Users.update(upd, {where : {ID : usermodel["ID"] } })
 		.then(function() { return userlib.getPublicUserInfo(usermodel["ID"], true); })
 	})
 	.then(function(userinfo) {
