@@ -8,6 +8,8 @@
 </table>
 <hr size="1" />
 <br />
+
+<form style="float:right" action="/admin/user/{{user.ID}}/logout" method="post"><button type="submit">Log out user</button></form>
 <a href="/admin/match/{{user.ID}}">Look up possible matches...</a>&nbsp;&nbsp;&nbsp;&nbsp;
 {{#approvable}}<form style="display:inline" action="/admin/user/{{user.ID}}/approve" method="post"><button type="submit">Approve user</button></form>{{/approvable}}<br />
 <a href="/admin/user/{{user.ID}}/sendasteam">Send message as Team Within...</a>&nbsp;&nbsp;&nbsp;&nbsp;

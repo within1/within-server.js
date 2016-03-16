@@ -159,7 +159,7 @@ where m.OtherUserID = ?", { replacements: [req.params.userid], type: models.sequ
 			return res.send("User not found");
 		var rl = [];
 		for (var i in data.dataValues) {
-			if ((data.dataValues[i] instanceof Array) || (data.dataValues[i] instanceof Object) || (i == "Token")) {
+			if ((data.dataValues[i] instanceof Array) || (data.dataValues[i] instanceof Object)  ) {
 				continue;
 			} else {
 				rl.push({"name" : i, "value" : data.dataValues[i]});
@@ -552,6 +552,17 @@ router.use("/admin/user/:userid/addmatch", function(req, res) {
 	}
 });
 
+router.post("/admin/user/:userid/logout", function(req, res) {
+	return models.Users.findOne({where : { ID : req.params["userid"]}})
+	.then(function(u) {
+		if (u == null)
+			throw "User not found";
+		return models.Users.update({"Token" : null}, {where : { ID : u["ID"] }})
+	})
+	.then(function(r) {
+		return res.redirect(301, "/admin/user/"+req.params["userid"]);
+	})
+})
 
 module.exports = router;
 
