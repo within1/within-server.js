@@ -4,28 +4,7 @@ var Promise = require('bluebird');
 var request = require("request");
 var match = require("../lib/match.js");
 
-function getFacebookFriends(cuser, cb) {
-	var reslist = [];
-	var cpage = 0;
-	var webget = function(url) {
-		// console.log(url);
-		request(url, function(err,res,body) {
-			if ((err != null) || (res.statusCode != 200)) {
-				console.error("facebook request statuscode "+res.statusCode+", error: "+err+" for user "+cuser["ID"]+" pulling "+url);
-				return cb(null, [] );
-			}
-
-			var cinfo = JSON.parse(body);
-			Array.prototype.push.apply(reslist,cinfo["data"]);
-			if ((cinfo["paging"] == undefined) || (cinfo["paging"]["next"] === undefined))
-				return cb(null, reslist);
-			setTimeout(function() { webget(cinfo["paging"]["next"]) },0);
-		});
-	};
-	webget("https://graph.facebook.com/v2.5/"+cuser["FacebookID"]+"/friends?limit=500&offset=0&format=json&access_token="+cuser["FacebookAccessToken"]);
-}
-
-var prfbfriends = Promise.promisify(getFacebookFriends);
+var prfbfriends = Promise.promisify(match.getFacebookFriends);
 
 
 models.Users.findAll({where : { FacebookAccessToken : { $ne : null } }, raw : true}).then(function(u) {
