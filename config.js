@@ -64,10 +64,17 @@ config  = {
 		},
 		development : {
 			devMail		: "joel@custlabs.com",
+			FlagEmail	: "joel@custlabs.com",
+			WaitlistEmail : "joel@custlabs.com",
+			TeamWithinMessageEmail : "joel@custlabs.com",
+			Inbound : "@devbound.within.guru",
+/*
+			devMail		: "joel@custlabs.com",
 			FlagEmail	: "hello+flag@within.guru",
 			WaitlistEmail : "hello+waitlist@within.guru",
 			TeamWithinMessageEmail : "hello+usermessage@within.guru",
 			Inbound : "@devbound.within.guru",
+*/
 		},
 		live : {
 			devMail		: "joel@custlabs.com",
