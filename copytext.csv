@@ -22,3 +22,4 @@ PushNewMatchAvailableCopy,"A new week, a new recommendation just for you. See wh
 PushMatchExpiringCopy,Your recommendation's 'bout to expire. Message them before they're gone!
 PushYoureApprovedCopy1,Congrats
 PushYoureApprovedCopy2, - You’re IN! Come check out your first recommendation.
+PushUnrespondedMessage, sent you a message yesterday - don't leave 'em hanging!

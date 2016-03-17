@@ -175,8 +175,7 @@ router.post("/api/AddUserThankYou", function(req, res) {
 			throw "Target user for message can't be found: "+req.body["OtherUserID"];
 		// send notifications
 		if (trgUser["DeviceToken"] != null) {
-			return copytext("./copytext.csv")
-			.then(function(textvalues) { return notif.SendPushNotification(trgUser, 0, cuser["FirstName"]+textvalues.get("PushThanxReceivedCopy"), "", cuser["ID"], notif.pushTypes["ThanxReceived"] );  })
+			return notif.SendPushNotification(trgUser, 0, cuser["FirstName"]+copytext("PushThanxReceivedCopy"), "", cuser["ID"], notif.pushTypes["ThanxReceived"] )
 			.then(function() {
 				return notif.SendEmailNotification(trgUser, 0, notif.emailTypes["TypeEmailThanxReceived"], cuser["FirstName"], cuser["ImageURL"], comment, cuser["ID"] );
 			})

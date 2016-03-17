@@ -13,6 +13,8 @@ var match = require("../lib/match.js");
 var notif = require("../lib/notifications.js");
 var copytext = require("../lib/copytext.js");
 var async = require("async");
+var cns = require("../lib/constants.js");
+var lifecycle = require("../lib/lifecycle.js")
 
 var UniqueConstraintError = models.sequelize.UniqueConstraintError;
 
@@ -41,7 +43,7 @@ function createNewMatch(cuser) {
 	.then(function(matches) {
 		cmatches = matches;
 		var newmatch = null;
-		var exparr = calcExpiryHourTime(notif.HrsMatchExpiration, notif.HrsPastMidnightToSendMatchNotification);
+		var exparr = calcExpiryHourTime(cns.HrsMatchExpiration, cns.HrsPastMidnightToSendMatchNotification);
 		var exptime = exparr[0];
 		var hrsLeft = exparr[1];
 		if (matches.length == 0)
@@ -68,7 +70,7 @@ function createNewMatch(cuser) {
 				$or : [{"SourceTable" : "NewMatchAvailable" }, {"SourceTable" : "ExpiringMatch" }],
 				UserID : cuser["ID"], "HasSent" : 0
 			} })
-			.then(function(newmsg) { return notif.UpdateExpiringMatchNotification(newmatch["ID"], cuser["ID"], 1) })
+			.then(function(newmsg) { return lifecycle.MatchCreated(newmatch["ID"], cuser["ID"] ) })
 			.then(function(newmsg) { return newmatch; } );
 		})
 		.catch(UniqueConstraintError, function(e) {

@@ -57,3 +57,5 @@ if (env != "local") {
   scheduledTasks.cronStart();
   console.log("Notification daemon started");
 }
+
+
