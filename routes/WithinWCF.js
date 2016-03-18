@@ -26,19 +26,18 @@ function routeProxy(funcname, postdata, cb) {
 	var url = baseurl+"api/"+funcname;
 	console.log(url);
 	return request({uri: url, method: "POST", json : postdata })
-	.then(function(res, body) {
-		if (error != null)
-			console.error(error);
+	.then(function(res) {
+		body = res["body"];
 		console.log("response from "+url+" ("+res.statusCode+")");
 		var cuid = (postdata["UserID"] !== undefined)?(postdata["UserID"]):(null);
 		if ((cuid == null) && (funcname == "AddEditFacebookUser") && (body["AddEditFacebookUserResult"] !== undefined) &&
 				(body["AddEditFacebookUserResult"]["PublicUserInformation"]["ID"] !== undefined))
 			cuid = body["AddEditFacebookUserResult"]["PublicUserInformation"]["ID"];
-		models.RequestLogs.create({"Request" : JSON.stringify(postdata), "Response" : JSON.stringify(body), "URL" : funcname, "StatusCode" : res.statusCode, "UserID" : cuid,
+		return models.RequestLogs.create({"Request" : JSON.stringify(postdata), "Response" : JSON.stringify(body), "URL" : funcname, "StatusCode" : res.statusCode, "UserID" : cuid,
 			"DateRequest" : dateFormat(new Date(), "isoUtcDateTime") })
-		.then(function() {
-			cb(null, body);
-		})
+	})
+	.then(function() {
+		cb(null, body);
 	})
 }
 
