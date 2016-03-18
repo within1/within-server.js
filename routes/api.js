@@ -44,19 +44,9 @@ router.post('/api/GetContactCardDetails', function(req, res) {
 		var carddata = data.get({plain: true});
 		console.log(carddata);
 		if (carddata["UserContactCards"].length == 0)
+			// this is wired into the iOS client
 			return res.json({"GetContactCardDetailsResult" : {
-				 "GetContactCardDetail": {
-		            "Company": "",
-		            "DateCreated": "",
-		            "DateModified": "",
-		            "Email": "",
-		            "ID": "",
-		            "Name": "",
-		            "PhoneNumber": "",
-		            "Title": "",
-		            "UserID": ""
-		        },
-				"Status" : { "Status": "0", "StatusMessage": "No record found" }
+				"Status" : { "Status": "0", "StatusMessage": "No records found!" }
 			}});
 		var c = carddata["UserContactCards"][0];
 		var apires = apilib.formatAPICall(c, ["DateCreated", "DateModified"]);
