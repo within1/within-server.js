@@ -1,16 +1,35 @@
 <h3>List of scheduled outgoing notifications:</h3>
  <table class="tablesorter" style="min-width:660px;">
-	<thead><tr><th>Scheduled</th><th>Template</th><th>Message</th><th>User</th><th>EmailType</th></tr></thead>
+	<thead><tr><th>Scheduled</th><th>Type</th><th>Template</th><th>Message</th><th>User</th><th>EmailSlug</th><th>Action</th></tr></thead>
 	<tbody>
 		{{#notifs}}
 			<tr><td>{{DateTarget}}</td>
+				<td>{{ctype}}</td>
 				<td>{{SourceTable}}</td>
 				<td>{{PushMessage}}</td>
-				<td>{{UserID}}</td>
-				<td>{{EmailType}}</td>
+				<td><a href="/admin/user/{{userid}}">{{username}}</a></td>
+				<td>{{EmailSlug}}</td>
+				<td id="m_{{ID}}"><a href="#" onclick="javascript:return send({{ID}});">Send now</a></td>
 			</tr>
 		{{/notifs}}
 	</tbody>
 </table>
 
 
+
+<script type="text/javascript">
+
+
+function send(id) {
+	$.ajax({type:"GET", url: "/admin/notifications/sendnow/"+id,
+		success: function(res) {
+			$("#m_"+id).html(res["res"]);
+		}
+	});
+	return false;
+}
+
+
+
+
+</script>

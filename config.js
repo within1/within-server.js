@@ -88,7 +88,8 @@ config  = {
 		local : { pfx : __dirname+"/PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
 		development : { pfx : __dirname + "/PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
 		live : { pfx : __dirname + "/PushNotification_Production.p12", production : true, passphrase : "ah16B0xrcH" },
-	}
+	},
+	version : "1.1"
 };
 
 module.exports = config;

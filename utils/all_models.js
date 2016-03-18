@@ -555,10 +555,10 @@ module.exports = function(sequelize) {
         "primaryKey": false
     },
     "UserID": {
-        "type": "INT",
+        "type": "BIGINT",
         "allowNull": true,
         "defaultValue": null,
-        "primaryKey": false
+        "primaryKey": true
     },
     "MessageID": {
         "type": "INT",
@@ -627,7 +627,7 @@ module.exports = function(sequelize) {
         "primaryKey": false
     },
     "OtherUserID": {
-        "type": "INT",
+        "type": "BIGINT",
         "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
@@ -905,21 +905,6 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "EntityTypes",  timestamps: false }), 
-	"Referrals" : sequelize.define("Referrals",{
-    "ID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true,
-        "autoIncrement": true
-    },
-    "ReferralCode": {
-        "type": "NVARCHAR",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    }
-}, {tableName : "Referrals",  timestamps: false }), 
 	"UserRatings" : sequelize.define("UserRatings",{
     "ID": {
         "type": "BIGINT",
@@ -965,6 +950,21 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "UserRatings",  timestamps: false }), 
+	"Referrals" : sequelize.define("Referrals",{
+    "ID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true,
+        "autoIncrement": true
+    },
+    "ReferralCode": {
+        "type": "NVARCHAR",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    }
+}, {tableName : "Referrals",  timestamps: false }), 
 	"UserReferrals" : sequelize.define("UserReferrals",{
     "ID": {
         "type": "BIGINT",
@@ -1343,6 +1343,8 @@ res.Users.hasMany(res.Messages, {foreignKey: "ReceiverID" , as : "MessagesReceiv
 res.Messages.belongsTo(res.Users, {foreignKey: "ReceiverID" , as : "MessagesReceiver" } );
 res.Users.hasMany(res.Messages, {foreignKey: "SenderID" , as : "MessagesSender" } );
 res.Messages.belongsTo(res.Users, {foreignKey: "SenderID" , as : "MessagesSender" } );
+res.Users.hasMany(res.Notifications, {foreignKey: "UserID" } );
+res.Notifications.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Locations.hasMany(res.UserLocations, {foreignKey: "LocationID" } );
 res.UserLocations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
 res.Users.hasMany(res.UserLocations, {foreignKey: "UserID" } );

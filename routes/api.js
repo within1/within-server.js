@@ -13,12 +13,13 @@ var notif = require("../lib/notifications.js");
 var copytext = require("../lib/copytext.js");
 var msglib =  require("../lib/messages.js");
 var match = require("../lib/match.js");
+var config = require("../config.js");
 
 router.use(bodyParser.json({type : "*/*", limit: '50mb'}));
 router.use(compression({ threshold: 512}));
 
 router.get('/api', function(req, res) {
-	res.json({"description" : "Within.guru server API", "version" : "1.0"});
+	res.json({"description" : "Within.guru server API", "version" : config.version });
 });
 
 

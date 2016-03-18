@@ -9,7 +9,7 @@ var router  = express.Router();
 var bodyParser = require('body-parser');
 var compression = require('compression');
 var Promise = require('bluebird');
-var request = require("request");
+var request = Promise.promisify(require("request"));
 var env       = process.env.NODE_ENV || "development";
 var imagedir = config.imagedir[env];
 var models  = require('../models');
@@ -25,7 +25,8 @@ function routeProxy(funcname, postdata, cb) {
 		baseurl = "http://within.local/";
 	var url = baseurl+"api/"+funcname;
 	console.log(url);
-	request({uri: url, method: "POST", json : postdata }, function(error, res, body) {
+	return request({uri: url, method: "POST", json : postdata })
+	.then(function(res, body) {
 		if (error != null)
 			console.error(error);
 		console.log("response from "+url+" ("+res.statusCode+")");
@@ -38,8 +39,7 @@ function routeProxy(funcname, postdata, cb) {
 		.then(function() {
 			cb(null, body);
 		})
-
-	});
+	})
 }
 
 router.get('/WithinWCF/Service1.svc/:apicall', function(req, res) {

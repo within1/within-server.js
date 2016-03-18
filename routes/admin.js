@@ -11,11 +11,12 @@ var async = require("async");
 var match = require("../lib/match.js");
 var adminlib = require("../lib/adminlib.js");
 var dateFormat = require('dateformat');
-var rp = require("request-promise");
 var notif = require("../lib/notifications.js");
 var msglib =  require("../lib/messages.js");
 var bodyParser = require('body-parser');
 var daemon = require("../lib/daemon.js");
+var Promise = require('bluebird');
+var request = Promise.promisify(require("request"));
 
 router.use(bodyParser.urlencoded({ extended: false }));
 
@@ -47,11 +48,9 @@ router.get('/admin/users/*', function(req, res) {
 	var cfilterid = "";
 	if (req.params[0] !== undefined) {
 		var cps = req.params[0].split("/");
-		console.log(cps);
 		for (var i = 0; i < cps.length; i +=2 ) {
 			cfiltername = cps[0];
 			cfilterid = cps[1];
-			console.log(cps[i]);
 			if (cps[i] == "")
 				continue;
 			else if (cps[i] == "skill") {
@@ -452,7 +451,7 @@ router.post("/admin/user/:userid/expirelatest", function(req, res) {
 		return models.Matches.update( { MatchExpireDate : dateFormat( new Date(), "isoUtcDateTime") }, { where : { ID : m[0]["ID"] } })
 	})
 	.then(function(r) {
-		return rp({uri : "http://"+req.headers.host+"/api/GetMatchesForUser", method: "POST", json : { "UserID" : cuser["ID"], "UserToken" : cuser["Token"] }})
+		return request({uri : "http://"+req.headers.host+"/api/GetMatchesForUser", method: "POST", json : { "UserID" : cuser["ID"], "UserToken" : cuser["Token"] }})
 	})
 	.then(function(js) {
 		// set notifications to be sent immediately
@@ -471,20 +470,33 @@ router.post("/admin/user/:userid/expirelatest", function(req, res) {
 
 // notifications lister
 router.get('/admin/notifications/', function(req, res) {
-	return models.Notifications.findAll({where : { hasSent : 0}, raw : true, order : "DateTarget asc"})
+	return models.Notifications.findAll({where : { hasSent : 0}, raw : true, order : "DateTarget asc", include: [models.Users] } )
 	.then(function(u) {
 		var revTable = {};
-		for (var i in notif.emailTypes)
-			revTable[notif.emailTypes[i]] = i;
 		for (var i in u) {
-			u[i]["EmailType"] = "";
-			if (u[i]["Type"] != null)
-				u[i]["EmailType"] = revTable[u[i]["Type"]];
+			u[i]["userid"] = u[i]["User.ID"];
+			u[i]["username"] = u[i]["User.FirstName"]+" "+u[i]["User.LastName"];
+			u[i]["EmailSlug"] = "";
+			if (u[i]["IsEmailNotificationFlag"])
+				u[i]["ctype"] = "email";
+			else
+				u[i]["ctype"] = "push";
+			if ((u[i]["Type"] != null) && (u[i]["IsEmailNotificationFlag"] == 1))
+				u[i]["EmailSlug"] = daemon.templates[u[i]["Type"]];
 		}
 		var output = Mustache.render(fs.readFileSync("./routes/admin_notifs.html", "utf8"), {"notifs" : u } );
 		var framed = Mustache.render(fs.readFileSync("./routes/admin_frame.html", "utf8"), {"child" : output});
 		res.send(framed);
 	});
+});
+
+router.get('/admin/notifications/sendnow/:id', function(req, res) {
+	// set notifications to be sent immediately
+	return models.Notifications.update({"DateTarget" :  dateFormat( new Date(), "isoUtcDateTime")  }, {where : { ID : req.params["id"] }})
+		.then(function(cupd) { return daemon.notifRefill(); })
+		.then(function() {
+			return res.json({"res" : "sent"});
+		})
 });
 
 // API calls lister
