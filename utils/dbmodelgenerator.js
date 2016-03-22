@@ -12,6 +12,11 @@ models.sequelize.query("SELECT * FROM information_schema.tables", { type: models
 		return models.sequelize.getQueryInterface().describeTable(res["TABLE_NAME"]).then(function(descr, index) {
       if ((descr["ID"] !== undefined) && (descr["ID"]["type"] == "BIGINT"))
         descr["ID"]["autoIncrement"] = true;
+      for (var i in descr) {
+        if ((descr[i]["type"] == "INT") && (descr[i]["defaultValue"] != null) && (descr[i]["defaultValue"] !== undefined)) {
+          descr[i]["defaultValue"] = descr[i]["defaultValue"].replace(/\W/g, '');
+        }
+      }
       alldescr[cname] = descr;
       return cname;
     }).then(function(cname , cb) {
@@ -86,5 +91,6 @@ models.sequelize.query("SELECT * FROM information_schema.tables", { type: models
     out += "};";
 
     console.warn(out);
+    process.exit(0);
   });
 
