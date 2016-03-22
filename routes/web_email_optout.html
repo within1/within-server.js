@@ -1,0 +1,11 @@
+<h3>Opt out from email notifications:</h3>
+{{{updated}}}
+<form action="/optout?email={{email}}" method="post">
+	Email address: <input type="email" name="email" value="{{email}}" /><br />
+	<br />
+	Receive notifications for:<br />
+	<input type="checkbox" name="opt_msg" id="opt_msg" {{opt_msg}} /><label for="opt_msg">when I get a new message</label><br />
+	<input type="checkbox" name="opt_thx" id="opt_thx" {{opt_thx}} /><label for="opt_thx">when I receive a Thanx</label><br />
+	<input type="checkbox" name="opt_rec" id="opt_rec" {{opt_rec}} /><label for="opt_rec">when I get a new recommendation</label><br />
+	<button type="submit">Save</button>
+</form>

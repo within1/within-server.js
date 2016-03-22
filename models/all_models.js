@@ -222,63 +222,6 @@ module.exports = function(sequelize) {
         "primaryKey": true
     }
 }, {tableName : "Matches",  timestamps: false }), 
-	"UserContactCards" : sequelize.define("UserContactCards",{
-    "ID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true,
-        "autoIncrement": true
-    },
-    "DateCreated": {
-        "type": "DATETIME",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "DateModified": {
-        "type": "DATETIME",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "UserID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true
-    },
-    "Name": {
-        "type": "NVARCHAR",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "Title": {
-        "type": "NVARCHAR",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "Company": {
-        "type": "NVARCHAR",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "PhoneNumber": {
-        "type": "NVARCHAR",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    },
-    "Email": {
-        "type": "NVARCHAR",
-        "allowNull": true,
-        "defaultValue": null,
-        "primaryKey": false
-    }
-}, {tableName : "UserContactCards",  timestamps: false }), 
 	"UserEducations" : sequelize.define("UserEducations",{
     "ID": {
         "type": "BIGINT",
@@ -372,6 +315,63 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "UserEducations",  timestamps: false }), 
+	"UserContactCards" : sequelize.define("UserContactCards",{
+    "ID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true,
+        "autoIncrement": true
+    },
+    "DateCreated": {
+        "type": "DATETIME",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "DateModified": {
+        "type": "DATETIME",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "UserID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true
+    },
+    "Name": {
+        "type": "NVARCHAR",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Title": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Company": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "PhoneNumber": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    },
+    "Email": {
+        "type": "NVARCHAR",
+        "allowNull": true,
+        "defaultValue": null,
+        "primaryKey": false
+    }
+}, {tableName : "UserContactCards",  timestamps: false }), 
 	"UserEmployments" : sequelize.define("UserEmployments",{
     "ID": {
         "type": "BIGINT",
@@ -905,6 +905,21 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "EntityTypes",  timestamps: false }), 
+	"Referrals" : sequelize.define("Referrals",{
+    "ID": {
+        "type": "BIGINT",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": true,
+        "autoIncrement": true
+    },
+    "ReferralCode": {
+        "type": "NVARCHAR",
+        "allowNull": false,
+        "defaultValue": null,
+        "primaryKey": false
+    }
+}, {tableName : "Referrals",  timestamps: false }), 
 	"UserRatings" : sequelize.define("UserRatings",{
     "ID": {
         "type": "BIGINT",
@@ -950,21 +965,6 @@ module.exports = function(sequelize) {
         "primaryKey": false
     }
 }, {tableName : "UserRatings",  timestamps: false }), 
-	"Referrals" : sequelize.define("Referrals",{
-    "ID": {
-        "type": "BIGINT",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": true,
-        "autoIncrement": true
-    },
-    "ReferralCode": {
-        "type": "NVARCHAR",
-        "allowNull": false,
-        "defaultValue": null,
-        "primaryKey": false
-    }
-}, {tableName : "Referrals",  timestamps: false }), 
 	"UserReferrals" : sequelize.define("UserReferrals",{
     "ID": {
         "type": "BIGINT",
@@ -1235,6 +1235,12 @@ module.exports = function(sequelize) {
         "allowNull": true,
         "defaultValue": null,
         "primaryKey": false
+    },
+    "EmailNotificationsOpt": {
+        "type": "INT",
+        "allowNull": false,
+        "defaultValue": "((7))",
+        "primaryKey": false
     }
 }, {tableName : "Users",  timestamps: false }), 
 	"TagAssociations" : sequelize.define("TagAssociations",{
@@ -1325,14 +1331,14 @@ res.Users.hasMany(res.Matches, {foreignKey: "OtherUserID" , as : "MatchesOtherUs
 res.Matches.belongsTo(res.Users, {foreignKey: "OtherUserID" , as : "MatchesOtherUser" } );
 res.Users.hasMany(res.Matches, {foreignKey: "ReachingOutUserID" , as : "MatchesReachingOutUser" } );
 res.Matches.belongsTo(res.Users, {foreignKey: "ReachingOutUserID" , as : "MatchesReachingOutUser" } );
-res.Users.hasMany(res.UserContactCards, {foreignKey: "UserID" } );
-res.UserContactCards.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Locations.hasMany(res.UserEducations, {foreignKey: "LocationID" } );
 res.UserEducations.belongsTo(res.Locations, {foreignKey: "LocationID" } );
 res.Schools.hasMany(res.UserEducations, {foreignKey: "SchoolID" } );
 res.UserEducations.belongsTo(res.Schools, {foreignKey: "SchoolID" } );
 res.Users.hasMany(res.UserEducations, {foreignKey: "UserID" } );
 res.UserEducations.belongsTo(res.Users, {foreignKey: "UserID" } );
+res.Users.hasMany(res.UserContactCards, {foreignKey: "UserID" } );
+res.UserContactCards.belongsTo(res.Users, {foreignKey: "UserID" } );
 res.Employers.hasMany(res.UserEmployments, {foreignKey: "EmployerID" } );
 res.UserEmployments.belongsTo(res.Employers, {foreignKey: "EmployerID" } );
 res.Locations.hasMany(res.UserEmployments, {foreignKey: "LocationID" } );
