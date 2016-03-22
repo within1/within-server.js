@@ -19,6 +19,9 @@ router.use(compression({ threshold: 512}));
 // overwrites devicetoken if so, and returns the full public & private user info
 router.post('/api/CheckForUserFromFacebookID', function(req, res) {
 	var usermodel = null;
+
+	if (req.body["FacebookAccessToken"] === undefined)
+		return res.send({"CheckForUserFromFacebookIDResult" : {"Status" : {"Status" : 0, "StatusMessage" : "New version available, please update your Within client" }}  });
 	apilib.requireParameters(req, ["FacebookID", "DeviceToken", "FacebookAccessToken"])
 	.then(function() {
 		return models.Users.findOne({where : { FacebookID : req.body["FacebookID"] }})
