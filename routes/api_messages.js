@@ -264,9 +264,9 @@ router.post("/api/RemoveMatchAndChatThread", function(req, res) {
 		if (match == null)
 			return;
 		if (match["ReachingOutUserID"] == req.body["UserID"])
-			return models.Matches.update({"ReachingOutUserHasDeletedFlag" : true, "IsDead" : true}, {where : {ID : cmatch["ID"]}} );
+			return models.Matches.update({"ReachingOutUserHasDeletedFlag" : true, "IsDead" : true}, {where : {ID : match["ID"]}} );
 		else
-			return models.Matches.update({"OtherUserHasDeletedFlag" : true, "IsDead" : true}, {where : {ID : cmatch["ID"]}} );
+			return models.Matches.update({"OtherUserHasDeletedFlag" : true, "IsDead" : true}, {where : {ID : match["ID"]}} );
 	})
 	.then(function() {
 		res.json({"RemoveMatchAndChatThreadResult" : {
