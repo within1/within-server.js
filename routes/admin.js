@@ -115,8 +115,8 @@ router.get("/admin/user/:userid", function(req, res) {
 	async.parallel({
 		"user" : function(cb) {
 			models.Users.findById(req.params.userid, {include: [
-				{ model : models.UserEducations, separate: true, include: [models.Schools]},
-				{ model : models.UserEmployments, separate: true, include: [models.Employers]},
+				{ model : models.UserEducations, separate: true, include: [models.Schools], order : "JourneyIndex asc" },
+				{ model : models.UserEmployments, separate: true, include: [models.Employers], order : "JourneyIndex asc"},
 				{ model : models.Entities, include: [{model: models.TagInstances, separate: true, include: [models.Tags] }] }
 			]}).then(function(data) { cb(null, data); })
 		},
